@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>Replicating `$.slideToggle` with Tailwind CSS & Alpine.js</h2>
+
+<p>I think jQuery's greatest feature is all of the animation / transition utilities. These methods truly changed how fast you can build a clean and interactive UI with some nice animations along the way.</p>
+<p>As people move away from jQuery though, it is hard to find a solid answer on how you can achieve a similar effect to <code>slideToggle</code>. I'm going to be using Tailwind v1.2+ alongside Alpine, using some modern CSS transformation rules.</p>
+<h2>The basics</h2>
+<p>CSS provides such really useful transformation properties that allow you to modify the appearance of an element. In this case, we want to use the <code>scaleY</code> transformation function. This will allow us to change the height of an element and Tailwind provides <code>scale-y-0</code> and <code>scale-y-100</code> classes for this.</p>
+<p>We also want to add some transitions for this scale change, so we'll use Tailwind's <code>transition-</code> classes too.</p>
+<p>On the Alpine side of things, we can use some <code>data-</code> attributes and event handlers to trigger the slide.</p>
+<h2>The click</h2>
+<p>The first thing needed is some sort of trigger. I'm going to use a <code>&lt;button&gt;</code> for this.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">button</span><span style="color: #24292F"> </span><span style="color: #0550AE">@click.prevent</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;&quot;</span><span style="color: #24292F">&gt;Toggle&lt;/</span><span style="color: #116329">button</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<p>We also need a scale target. You could hard-code this, but I want to make this re-usable and will instead use a <code>data-target</code> attribute. We can use this to declare the query selector of our target element.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">button</span><span style="color: #24292F"> </span><span style="color: #0550AE">@click.prevent</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">data-target</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;#toggleTarget&quot;</span><span style="color: #24292F">&gt;Toggle&lt;/</span><span style="color: #116329">button</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<p>It would help if that target <em>actually</em> existed on the page. I'll make it a sibling of the <code>&lt;button&gt;</code>, but you could put it anywhere on the page really.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">button</span><span style="color: #24292F"> </span><span style="color: #0550AE">@click.prevent</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">data-target</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;#toggleTarget&quot;</span><span style="color: #24292F">&gt;Toggle&lt;/</span><span style="color: #116329">button</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">div</span><span style="color: #24292F"> </span><span style="color: #0550AE">id</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;toggleTarget&quot;</span><span style="color: #24292F">&gt;&lt;/</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<h2>The base styles</h2>
+<p>Our target also needs some classes for this to function correctly. These classes will apply some sensible defaults to the element so that we need to do less work with Alpine.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">button</span><span style="color: #24292F"> </span><span style="color: #0550AE">@click.prevent</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">data-target</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;#toggleTarget&quot;</span><span style="color: #24292F">&gt;Toggle&lt;/</span><span style="color: #116329">button</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">div</span><span style="color: #24292F"> </span><span style="color: #0550AE">id</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;toggleTarget&quot;</span></span>
+<span class="line"><span style="color: #24292F">     </span><span style="color: #0550AE">class</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;transition-transform ease-out overflow-hidden origin-top transform&quot;</span></span>
+<span class="line"><span style="color: #24292F">&gt;&lt;/</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<p><code>transition-transform</code> will make sure that our target element will transform when any <code>transform: ...</code> properties change. The <code>ease-out</code> class defines our timing function, in this case: <code>transition-timing-function: ease-out</code>.</p>
+<p>We want to hide any overflow inside of our target so that any text doesn't hang outside of it whilst scaling.</p>
+<p><code>origin-top</code> will ensure our transformation uses the <strong>top</strong> of the element as it's origin / base point. If you change this to <code>origin-bottom</code>, the <code>scale</code> will go from the top to the <strong>bottom</strong> of the element. Change this depending on which effect you prefer.</p>
+<p><code>transform</code> tells Tailwind to add a master <code>transform</code> rule that will react to changes of CSS custom properties, made by the <code>scale-y-*</code> classes I mentioned earlier.</p>
+<h2>Making it move</h2>
+<p>Now that we have some basic classes on the target element, we can go ahead and start on toggle itself. I'm going to write all of this JavaScript inside of the <code>@click.prevent</code> on the <code>&lt;button&gt;</code>, but you are free to move this into a function.</p>
+<p>We first need to get the target element:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">button</span><span style="color: #24292F"> </span><span style="color: #0550AE">data-target</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;#toggleTarget&quot;</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0550AE">@click.prevent</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;document.querySelector($event.target.dataset.target)&quot;</span></span>
+<span class="line"><span style="color: #24292F">&gt;Toggle&lt;/</span><span style="color: #116329">button</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<p>Then we need to toggle the <code>scale-y-0</code> class.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">button</span><span style="color: #24292F"> </span><span style="color: #0550AE">data-target</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;#toggleTarget&quot;</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0550AE">@click.prevent</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;document.querySelector($event.target.dataset.target).classList.toggle(&#39;scale-y-0&#39;)&quot;</span></span>
+<span class="line"><span style="color: #24292F">&gt;Toggle&lt;/</span><span style="color: #116329">button</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<p>If you add some dummy text to the target element, you'll notice that it toggles state correctly but there's no smooth animation. That is because we haven't added a <code>transition-duration</code> property to our target element.</p>
+<p>There are a couple of options here:</p>
+<ol>
+<li>
+<p>Add a class with a default duration. For example, <code>duration-500</code> will make sure that the transformation takes <strong>500ms</strong> to finish.</p>
+</li>
+<li>
+<p>Add a class and support a <code>data-duration</code> attribute to change it on a trigger basis.</p>
+</li>
+</ol>
+<p>The first option is pretty self-explanatory but I'd like to show you how to do the section approach too.</p>
+<h2><code>data-duration</code> support</h2>
+<p>Add a <code>data-duration</code> attribute to the trigger element. I'll use 700 as my default value.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">button</span><span style="color: #24292F"> </span><span style="color: #0550AE">data-target</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;#toggleTarget&quot;</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0550AE">data-duration</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;700&quot;</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0550AE">@click.prevent</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;document.querySelector($event.target.dataset.target)&quot;</span></span>
+<span class="line"><span style="color: #24292F">&gt;Toggle&lt;/</span><span style="color: #116329">button</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<p>Now, inside of your click handler we need to set the property on our target element, so let's do a little refactoring too:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">button</span><span style="color: #24292F"> </span><span style="color: #0550AE">data-target</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;#toggleTarget&quot;</span><span style="color: #24292F"> </span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0550AE">data-duration</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;700&quot;</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0550AE">@click.prevent</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;</span></span>
+<span class="line"><span style="color: #0A3069">        const target = document.querySelector($event.target.dataset.target)</span></span>
+<span class="line"><span style="color: #0A3069">                    </span></span>
+<span class="line"><span style="color: #0A3069">        if ($event.target.dataset.duration) {</span></span>
+<span class="line"><span style="color: #0A3069">            target.style.transitionDuration = `${$event.target.dataset.duration}ms`            </span></span>
+<span class="line"><span style="color: #0A3069">        }</span></span>
+<span class="line"><span style="color: #0A3069">                    </span></span>
+<span class="line"><span style="color: #0A3069">        target.classList.toggle(&#39;scale-y-0&#39;)</span></span>
+<span class="line"><span style="color: #0A3069">    &quot;</span></span>
+<span class="line"><span style="color: #24292F">&gt;Toggle&lt;/</span><span style="color: #116329">button</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<p>Since we need the target more than once, we can assign it to a constant. Then, using the <code>style</code> property of the element, set the <code>transitionDuration</code> property using the new <code>data-duration</code> attribute.</p>
+<h2>Live example</h2>
+<p>I've made a prettier example <a href="https://codepen.io/ryangjchandler/pen/YzqXzqo">here</a> for you to check out. You could take this a step-further and make a <code>window.$slideToggle</code> variable that has this as a function so that you can use it throughout your application.</p>
+
+    
+</body>
+</html>

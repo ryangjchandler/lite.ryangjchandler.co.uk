@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>Unconventional Laravel: Route groups and `$router`</h2>
+
+<p>I'd estimate that 99% of Laravel applications register their routes using the <code>Illuminate\Support\Facades\Route</code> class. It looks a little something like:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">Illuminate\Support\Facades\Route</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #0550AE">Route</span><span style="color: #CF222E">::</span><span style="color: #8250DF">get</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;/projects&#39;</span><span style="color: #24292F">, </span><span style="color: #0A3069">&#39;ProjectsController@index&#39;</span><span style="color: #24292F">);</span></span>
+<span class="line"></span></code></pre>
+<p>The official documentation tells you this is the way to register routes and most applications use this method.</p>
+<h2>Route groups</h2>
+<p>A route group is a way of collecting a number of routes and assigning the same properties, or options, to them. For example, you could prefix a group of routes with the same url:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #0550AE">Route</span><span style="color: #CF222E">::</span><span style="color: #8250DF">prefix</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;/projects&#39;</span><span style="color: #24292F">)</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">group</span><span style="color: #24292F">(</span><span style="color: #CF222E">function</span><span style="color: #24292F"> () {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0550AE">Route</span><span style="color: #CF222E">::</span><span style="color: #8250DF">get</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;/&#39;</span><span style="color: #24292F">, </span><span style="color: #0A3069">&#39;ProjectsController@index&#39;</span><span style="color: #24292F">);</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0550AE">Route</span><span style="color: #CF222E">::</span><span style="color: #8250DF">get</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;/{project}&#39;</span><span style="color: #24292F">, </span><span style="color: #0A3069">&#39;ProjectsController@show&#39;</span><span style="color: #24292F">);</span></span>
+<span class="line"><span style="color: #24292F">});</span></span>
+<span class="line"></span></code></pre>
+<p>This is a super convenient way of reducing the amount of duplication you would get from individually registering routes with that <code>/projects</code> prefix.</p>
+<p>But did you know that you can drop the use of the <code>Route</code> facade inside of the group callback and make use of a <code>$router</code> parameter instead?</p>
+<h2>The <code>$router</code> parameter</h2>
+<p>The <code>Closure</code> that is passed to the <code>group()</code> method can actually take an argument. I tend to call it <code>$router</code> but you can call it whatever you want. So taking the previous example of a route group, you can do this:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #0550AE">Route</span><span style="color: #CF222E">::</span><span style="color: #8250DF">prefix</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;/projects&#39;</span><span style="color: #24292F">)</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">group</span><span style="color: #24292F">(</span><span style="color: #CF222E">function</span><span style="color: #24292F"> ($router) {</span></span>
+<span class="line"><span style="color: #24292F">    $router</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">get</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;/&#39;</span><span style="color: #24292F">, </span><span style="color: #0A3069">&#39;ProjectsController@index&#39;</span><span style="color: #24292F">);</span></span>
+<span class="line"><span style="color: #24292F">    $router</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">get</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;/{project}&#39;</span><span style="color: #24292F">, </span><span style="color: #0A3069">&#39;ProjectsController@show&#39;</span><span style="color: #24292F">);</span></span>
+<span class="line"><span style="color: #24292F">});</span></span>
+<span class="line"></span></code></pre>
+<p>If you wanted to type-hint parameter, you should type hint the <code>Illuminate\Routing\Router</code> class. The line of code responsible can be <a href="https://github.com/illuminate/routing/blob/1206eeb0456e9760e321c64338b9f0e305263628/Router.php#L421">found here</a>.</p>
+<h2>Pros &amp; Cons</h2>
+<p>To be honest, there aren't really any big pros or cons to this approach. It's more of a &quot;Did you know you <em>could</em> do this?&quot; one.</p>
+<p>Some people might think that there is a performance benefit since you're not calling a method on the <code>Route</code> facade each time, but after testing this with 100 routes the difference was literally a couple of milliseconds. This would be down to the fact that, under the hood, Laravel caches the underlying instance so that it doesn't need to be resolved from the container each time.</p>
+<h2>Sign off</h2>
+<p>If you've ever seen or used this approach before, I'd love to know on <a href="https://twitter.com/ryangjchandler">Twitter</a>.</p>
+<p>Thanks for reading 👋</p>
+
+    
+</body>
+</html>

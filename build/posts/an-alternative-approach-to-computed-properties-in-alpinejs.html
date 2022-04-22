@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>An Alternative Approach to Computed Properties in Alpine.js</h2>
+
+<p>The other day, I wrote an article on <a href="/articles/pseudo-computed-properties-in-alpine">how to achieve a similar effect to computed properties</a> in <a href="https://github.com/alpinejs/alpine">Alpine.js</a>. The approach that I took involved simply calling a method that returned a value:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">div</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-data</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;data()&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">span</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-text</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;hello()&quot;</span><span style="color: #24292F">&gt;&lt;/</span><span style="color: #116329">span</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">&lt;/</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">script</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">data</span><span style="color: #24292F">() {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">return</span><span style="color: #24292F"> {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #8250DF">hello</span><span style="color: #24292F">: </span><span style="color: #CF222E">function</span><span style="color: #24292F"> () {</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0A3069">&quot;Hello!&quot;</span></span>
+<span class="line"><span style="color: #24292F">        }</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"><span style="color: #24292F">&lt;/</span><span style="color: #116329">script</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<p>This works quite well, but they're not <em>really</em> properties anymore. The <code>&lt;span&gt;</code> <em>is</em> still reactive, so if the return value depended on another data property, the UI would be updated when the dependency gets changed. To my eyes, <code>property()</code> isn't as pretty as <code>property</code> on it's own.</p>
+<p>Today though, I saw a tweet from <a href="https://twitter.com/sebdedeyne">Sebastian De Deyne</a> that took a different approach to the same concept.</p>
+<div class="flex justify-center">
+<blockquote class="twitter-tweet"><p lang="en" dir="ltr"><a href="https://twitter.com/calebporzio?ref_src=twsrc%5Etfw">@calebporzio</a> Quick Alpine question, can I use getters in x-data, or am I going to shoot myself in the foot somehow? <a href="https://t.co/nBo4YcVNzZ">pic.twitter.com/nBo4YcVNzZ</a></p>&mdash; Sebastian De Deyne (@sebdedeyne) <a href="https://twitter.com/sebdedeyne/status/1252562642172067840?ref_src=twsrc%5Etfw">April 21, 2020</a></blockquote> &lt;script async src="https://platform.twitter.com/widgets.js" charset="utf-8">&lt;/script>
+</div>
+<p>This approach just didn't occur to me at first. It's probably because I hadn't actually tried it. The first thing I did was hop into CodePen and try it out:</p>
+<p class="codepen" data-height="265" data-theme-id="dark" data-default-tab="js,result" data-user="ryangjchandler" data-slug-hash="rNOWBrB" style="height: 265px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; border: 2px solid; margin: 1em 0; padding: 1em;" data-pen-title="Getters Alpine.js">
+  <span>See the Pen <a href="https://codepen.io/ryangjchandler/pen/rNOWBrB">
+  Getters Alpine.js</a> by Ryan Chandler (<a href="https://codepen.io/ryangjchandler">@ryangjchandler</a>)
+  on <a href="https://codepen.io">CodePen</a>.</span>
+</p>
+&lt;script async src="https://static.codepen.io/assets/embed/ei.js">&lt;/script>
+<p>Out of the box, it just works! Click the button on the right and watch the <code>&lt;span&gt;</code> below update. I almost feel kind of stupid that I hadn't though of this originally. Since Alpine is using an object literal as it's source of data, we can use all of the normal things an object provides, such as <a href="https://javascript.info/property-accessors">getters and setters</a>.</p>
+<p>The other added benefit this method provides is that you <strong>don't</strong> need to add the parentheses anymore because when Alpine tries to access the property, the JavaScript engine will recognise that there is a getter defined and call that for us.</p>
+<h2>Browser compatibility</h2>
+<p>Regular <code>getters</code> and <code>setters</code> are supported in all modern browsers and ... 🥁 all the way back to Internet Explorer 9. The only thing that isn't supported that far back is computed property names, so you can't do things like:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">data</span><span style="color: #24292F">() {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">return</span><span style="color: #24292F"> {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">get</span><span style="color: #24292F"> [expression]() {</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;Hello!&#39;</span></span>
+<span class="line"><span style="color: #24292F">        }</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>The expression is dynamic and acts like a fallthrough if the property doesn't exist or doesn't have a getter defined already. That's not a big deal, because nobody should be using IE9 today. Seriously, <strong>nobody</strong>.</p>
+<h2>Sign off</h2>
+<p>Thanks to <a href="https://twitter.com/sebdedeyne">Sebastian</a> for tweeting about this. You can read some of his blog posts on <a href="https://sebastiandedeyne.com/">his personal blog</a> too.</p>
+<p>Personally I'm going to be using this approach going forward, especially since the browser support is so good (unusual, I know).</p>
+
+    
+</body>
+</html>

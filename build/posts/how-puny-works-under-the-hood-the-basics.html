@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>How Puny Works under the Hood: The Basics</h2>
+
+<h2>Introduction</h2>
+<p>For those of you who don't know, or haven't heard about it, <a href="https://github.com/ryangjchandler/puny">Puny</a> is my very own unit testing library.</p>
+<p>Unlike PHPUnit et al, it's designed with minimalism as it's main goal. There are only a handful (literally) of standard functions provided by Puny and it really makes you think differently about how you test your applications or packages.</p>
+<p>The best way to showcase Puny is by writing a simple unit test for a <code>StringFormatter</code> class.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">class</span><span style="color: #24292F"> </span><span style="color: #953800">StringFormatter</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">static</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">upper</span><span style="color: #24292F">(</span><span style="color: #CF222E">string</span><span style="color: #24292F"> $input)</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0550AE">strtoupper</span><span style="color: #24292F">($input);</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>All this method does is wrap the <code>strtoupper()</code> function, but it's a good way of showcasing the testing utilities.</p>
+<p>Normally my test files can be found in a <code>tests</code> directory at the root of my project. By default, Puny will try to look for this folder.</p>
+<p>Since we're unit testing, it's also common practice to test each component or concept inside of it's own file, so I'll create a new file called <code>tests/StringFormatter.php</code>.</p>
+<p>Puny provides a <code>Puny\test</code> function that can be used to register a new test.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #0550AE">Puny\test</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #8250DF">test</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;it can convert a string to uppercase&#39;</span><span style="color: #24292F">, </span><span style="color: #CF222E">function</span><span style="color: #24292F"> () {</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">});</span></span>
+<span class="line"></span></code></pre>
+<p>The <code>Puny\test</code> function accepts <strong>two arguments</strong>, the first is the name of the test itself (a description of what you will be testing) and the second is a <code>callable</code> / <code>Closure</code> that actually performs the test's logic.</p>
+<p>In this case, we'll be calling <code>StringFormatter::upper()</code> and checking that the return value is suitable.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #0550AE">Puny\</span><span style="color: #24292F">{</span><span style="color: #0550AE">test</span><span style="color: #24292F">, </span><span style="color: #0550AE">ok</span><span style="color: #24292F">};</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #8250DF">test</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;it can convert a string to uppercase&#39;</span><span style="color: #24292F">, </span><span style="color: #CF222E">function</span><span style="color: #24292F"> () {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #8250DF">ok</span><span style="color: #24292F">(</span><span style="color: #0550AE">StringFormatter</span><span style="color: #CF222E">::</span><span style="color: #8250DF">upper</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;hello&#39;</span><span style="color: #24292F">) </span><span style="color: #CF222E">===</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;HELLO&#39;</span><span style="color: #24292F">, </span><span style="color: #0A3069">&#39;it converts correctly&#39;</span><span style="color: #24292F">);</span></span>
+<span class="line"><span style="color: #24292F">});</span></span>
+<span class="line"></span></code></pre>
+<p>Here I'm using the <code>Puny\ok</code> function to make sure that something is, you guessed it, &quot;ok&quot;. All it really does is check that the first argument is <code>true</code> or <code>false</code>.</p>
+<p>If it's <code>true</code> it doesn't do anything at all. If it's <code>false</code>, it will print out an error in the console.</p>
+<p>The second argument is a sub-description of the specific assertion being made. This will be used in the error output so that you can quickly find the right failing assertion.</p>
+<h3>A better equality helper</h3>
+<p>Instead of writing out a <code>bool</code> condition for the <code>Puny\ok</code> helper, you could instead use the <code>Puny\eq</code> helper function. This is just a shorthand for comparing two operands.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #0550AE">Puny\</span><span style="color: #24292F">{</span><span style="color: #0550AE">test</span><span style="color: #24292F">, </span><span style="color: #0550AE">eq</span><span style="color: #24292F">};</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #8250DF">test</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;it can convert a string to uppercase&#39;</span><span style="color: #24292F">, </span><span style="color: #CF222E">function</span><span style="color: #24292F"> () {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #8250DF">eq</span><span style="color: #24292F">(</span><span style="color: #0550AE">StringFormatter</span><span style="color: #CF222E">::</span><span style="color: #8250DF">upper</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;hello&#39;</span><span style="color: #24292F">), </span><span style="color: #0A3069">&#39;HELLO&#39;</span><span style="color: #24292F">, </span><span style="color: #0A3069">&#39;it converts correctly&#39;</span><span style="color: #24292F">);</span></span>
+<span class="line"><span style="color: #24292F">});</span></span>
+<span class="line"></span></code></pre>
+<p>It's almost identical. You just don't need to worry about writing the <code>===</code> (or <code>==</code> if you're a menace) yourself.</p>
+<blockquote>
+<p>It's worth noting that the <code>Puny\eq</code> helper will always make <strong>strict comparisons</strong>. If this isn't fit for your use case, just use <code>Puny\ok</code>.</p>
+</blockquote>
+<h2>How it all works</h2>
+<p>It all starts with the Puny CLI. This is a file installed with the Composer package that you can use to actually run your tests. It's only responsible for invoking the <code>Puny::run()</code> and setting the correct tests folder method.</p>
+<p>As I mentioned previously, Puny will default to using a <code>tests</code> folder in your current working directory (according to <code>getcwd()</code>). This is a great default and makes running the command easier since you don't need to pass in any options or arguments.</p>
+<blockquote>
+<p>You can specify a custom folder by passing in an argument to the command - <code>puny ./tests-folder</code>.</p>
+</blockquote>
+<h3>Bootstrapping</h3>
+<p>Puny does include some niceties for running some logic before your entire test suite. If it encounters a <code>bootstrap.php</code> file in the root of your <code>tests</code> folder, it will include that file.</p>
+<p>This means you can setup singleton classes, bind things to a container or anything else that you might need to use throughout your test suite.</p>
+<h3>Discovering tests</h3>
+<p>Once Puny knows where the tests are located, it walks through that directory recursively and will include any PHP files it finds. The interesting thing here is that the tests themselves (registered using <code>Puny\test</code>) aren't actually being run quite yet.</p>
+<p>Calling the <code>Puny\test</code> function will actually call an internal <code>Puny::register</code> method. This method places the test inside of a single array on the main <code>Puny\Puny</code> instance. This is possible because of how PHP evaluates an entire file when it is imported using <code>include</code> or <code>require</code>.</p>
+<p>This happens for each test file and eventually, once all folders have been walked and all files have been included, Puny is left with an array of test names and callbacks.</p>
+<blockquote>
+<p>By building up this array, it implicitly forces test names to be unique. If two different files both have a test with the same name, only the last test file to be included will <em>actually</em> be run because it overwrites the earlier test.</p>
+</blockquote>
+<h3>Running tests</h3>
+<p>Now that there is a collection of tests to run, Puny will loop over this array and invoke each <code>callable</code> / <code>Closure</code>.</p>
+<p>Each callback is invoked inside of a <code>try / catch</code> block. This means that any exceptions thrown by the test will be caught by Puny and can therefore be handled in a special way.</p>
+<p>This is exactly how the <code>Puny\ok</code>, <code>Puny\eq</code> and <code>Puny\skip</code> function work. I'll use <code>Puny\ok</code> as an example:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">ok</span><span style="color: #24292F">(</span><span style="color: #CF222E">bool</span><span style="color: #24292F"> $check, </span><span style="color: #CF222E">string</span><span style="color: #24292F"> $id) {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">if</span><span style="color: #24292F"> (</span><span style="color: #CF222E">!</span><span style="color: #24292F"> $check) {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">throw</span><span style="color: #24292F"> </span><span style="color: #CF222E">new</span><span style="color: #24292F"> </span><span style="color: #0550AE">NotOkException</span><span style="color: #24292F">($id);</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0550AE">true</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>This is the code for the <code>Puny\ok</code> helper. All it does is check if the <code>$check</code> is <code>false</code> (falsy) and throws an exception if it is.
+Puny can then register a catch block for this exception, <code>NotOkException</code> and handle it accordingly.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">try</span><span style="color: #24292F"> {</span></span>
+<span class="line"><span style="color: #24292F">    $callback();</span></span>
+<span class="line"><span style="color: #24292F">} </span><span style="color: #CF222E">catch</span><span style="color: #24292F"> (</span><span style="color: #0550AE">NotOkException</span><span style="color: #24292F"> $e) {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0550AE">Console</span><span style="color: #CF222E">::</span><span style="color: #8250DF">error</span><span style="color: #24292F">(</span><span style="color: #0A3069">&quot;Failed: {</span><span style="color: #24292F">$e</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">getMessage</span><span style="color: #0A3069">()}&quot;</span><span style="color: #24292F">);</span></span>
+<span class="line"><span style="color: #24292F">  </span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">failed</span><span style="color: #CF222E">++</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>The exception is being handled so it will never be reported to the user in the console. Instead Puny uses it's own output to notify the user of a failure and also increase a counter for the number of failed tests.</p>
+<p>The benefit to this approach is that the rest of the test suite can still be run whilst notifying the user of any failures.</p>
+<p>The <code>Puny\eq</code> function uses the <code>Puny\ok</code> function internally, so there's no special conditions needed for that.</p>
+<p>For the <code>Puny\skip</code> function to work, all we need to add is another <code>catch</code> block for a different exception:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">try</span><span style="color: #24292F"> {</span></span>
+<span class="line"><span style="color: #24292F">    $callback();</span></span>
+<span class="line"><span style="color: #24292F">} </span><span style="color: #CF222E">catch</span><span style="color: #24292F"> (</span><span style="color: #0550AE">NotOkException</span><span style="color: #24292F"> $e) {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0550AE">Console</span><span style="color: #CF222E">::</span><span style="color: #8250DF">error</span><span style="color: #24292F">(</span><span style="color: #0A3069">&quot;Failed: {</span><span style="color: #24292F">$e</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">getMessage</span><span style="color: #0A3069">()}&quot;</span><span style="color: #24292F">);</span></span>
+<span class="line"><span style="color: #24292F">  </span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">failed</span><span style="color: #CF222E">++</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">} </span><span style="color: #CF222E">catch</span><span style="color: #24292F"> (</span><span style="color: #0550AE">SkippedException</span><span style="color: #24292F"> $e) {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0550AE">Console</span><span style="color: #CF222E">::</span><span style="color: #8250DF">warning</span><span style="color: #24292F">(</span><span style="color: #0A3069">&quot;Skipped: {</span><span style="color: #24292F">$name</span><span style="color: #0A3069">}&quot;</span><span style="color: #24292F">);</span></span>
+<span class="line"><span style="color: #24292F">  </span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">skipped</span><span style="color: #CF222E">++</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">  </span></span>
+<span class="line"><span style="color: #24292F">  	</span><span style="color: #CF222E">continue</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>The <code>Puny\skip</code> function can then throw a new <code>SkippedException</code> when it's called.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">skip</span><span style="color: #24292F">() {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">throw</span><span style="color: #24292F"> </span><span style="color: #CF222E">new</span><span style="color: #24292F"> </span><span style="color: #0550AE">SkippedException</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>Calling the <code>Puny\skip</code> function will also report back to the user in the console and <code>continue</code> the <code>foreach</code> loop, moving on to the next test.</p>
+<h2>Conclusion</h2>
+<p>And that's all there is to it. Kind of, anyway. I've gone over the basic inner workings of Puny in this article but I'll be writing a follow-up in a couple of weeks that goes over how the <code>Puny\spy</code> helper function works.</p>
+<p>If you are interested in giving Puny a try, head over to the <a href="https://github.com/ryangjchandler/puny">GitHub repository</a> for more information.</p>
+<p>If you've already used Puny, I'd love to know so message me on <a href="https://twitter.com/ryangjchandler">Twitter</a>.</p>
+
+    
+</body>
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>Maintainable Alpine Components</h2>
+
+<p>I've been using Alpine for the last couple of months in most of my projects and have experimented with different organisation patterns that improve the maintainability of my components.</p>
+<p>I'd like to take you through some of them, as well as the pros and cons of each.</p>
+<h2>Data functions</h2>
+<p>This one shouldn't be new to regular Alpine users. This approach replaces the inline <code>x-data</code> object literal with a function that returns an object instead.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">div</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-data</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;data()&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">p</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-text</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;text&quot;</span><span style="color: #24292F">&gt;&lt;/</span><span style="color: #116329">p</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">&lt;/</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">script</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">data</span><span style="color: #24292F">() {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">return</span><span style="color: #24292F"> {</span></span>
+<span class="line"><span style="color: #24292F">            text: </span><span style="color: #0A3069">&quot;Hello, World!&quot;</span></span>
+<span class="line"><span style="color: #24292F">        }</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">&lt;/</span><span style="color: #116329">script</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<p><strong>Pros</strong>:</p>
+<ul>
+<li>For component with larger datasets, it's far easier to manage than an object string.</li>
+<li>You can add methods to the returned object that it also easier to manage.</li>
+<li>Makes using Alpine with third-party libraries simpler.</li>
+</ul>
+<p><strong>Cons</strong>:</p>
+<ul>
+<li>Function must be defined on the <code>window</code> object, so a large number of unique components starts to add lots of bloat to the global namespace.</li>
+<li>These objects aren't structured in any particular way, your data is sat directly next to your methods.</li>
+<li>When placed in an inline <code>&lt;script&gt;</code> tag, you lose the ability to minify your JavaScript and reduce data transfer sizes.</li>
+</ul>
+<p><strong>Summary</strong></p>
+<p>This approach works great for small sites and developers who don't mind explicitely putting everything under <code>window</code> . It's also useful if you're integrating with third party libraries that interact with your Alpine components.</p>
+<h2>Async components</h2>
+<p>If you have used Vue before, you'll probably be familiar with the concept of asynchronous components, a design pattern that only loads the component / JavaScript when a particular component is needed.</p>
+<p>This is especially useful when using code-splitting / browser-supported ES modules. I'll show you an example using browser-supported ES modules:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #6E7781">// index.js (loaded in browser using &lt;script type=&quot;module&quot;&gt;</span></span>
+<span class="line"><span style="color: #24292F">;(</span><span style="color: #CF222E">async</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F">() {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">if</span><span style="color: #24292F"> (document.</span><span style="color: #8250DF">querySelector</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;[x-data=&quot;example()&quot;]&#39;</span><span style="color: #24292F">)) {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">await</span><span style="color: #24292F"> </span><span style="color: #CF222E">import</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;./components/example.js&#39;</span><span style="color: #24292F">).</span><span style="color: #8250DF">then</span><span style="color: #24292F">(</span><span style="color: #953800">module</span><span style="color: #24292F"> </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> window[</span><span style="color: #0A3069">&#39;example&#39;</span><span style="color: #24292F">] </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0550AE">module</span><span style="color: #24292F">.default)</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">})()</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #6E7781">// ./components/example.js</span></span>
+<span class="line"><span style="color: #CF222E">export</span><span style="color: #953800"> </span><span style="color: #CF222E">default</span><span style="color: #953800"> </span><span style="color: #CF222E">function</span><span style="color: #953800">() </span><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">return</span><span style="color: #24292F"> {</span></span>
+<span class="line"><span style="color: #24292F">        message: </span><span style="color: #0A3069">&#39;Hello!&#39;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #8250DF">clear</span><span style="color: #24292F">() {</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #0550AE">this</span><span style="color: #24292F">.message </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;&#39;</span></span>
+<span class="line"><span style="color: #24292F">        }</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>The code above is taking advantage of <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import#Dynamic_Imports"><strong>dynamic imports</strong></a>. This is supported in all major modern browsers, not IE11. If you need to support IE11, I'd suggest creating a separate bundle that has support for it.</p>
+<p>In this instance, we are checking to see if any <code>example</code> components are found on the page. If one is found, we want to load the code for that component. This is stored inside <code>components/example.js</code> . Again, this example is using ES modules hence the exports.</p>
+<p>When the component is found on the page, we want to dynamically import the file responsible for the component and assign the default export to a <code>window.example</code> variable so that Alpine can call it.</p>
+<p><strong>Pros</strong>:</p>
+<ul>
+<li>Uses modern JavaScript features with no transpilation, can run directly in the browser.</li>
+<li>Only the code that is needed gets loaded, so no unnecessary data transfer.</li>
+<li>Component logic can be separated into individual files, on a component by component basis.</li>
+</ul>
+<p><strong>Cons</strong>:</p>
+<ul>
+<li>Uses modern JavaScript features with no transpilation so won't run directly in IE11.</li>
+<li>Won't be useful when dynamically inserting content into page, since it does not re-evaluate on page mutation, but this could easily be fixed with a <code>MutationObserver</code> .</li>
+<li>Still a big blur of data properties and logical methods.</li>
+<li>Still using puts functions on <code>window</code> object.</li>
+</ul>
+<p>To counter the last &quot;con&quot;, I've found a way that makes it clearer what is what in my head.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #6E7781">// utils.js</span></span>
+<span class="line"><span style="color: #CF222E">export</span><span style="color: #24292F"> </span><span style="color: #CF222E">const</span><span style="color: #24292F"> </span><span style="color: #0550AE">buildComponent</span><span style="color: #24292F"> </span><span style="color: #CF222E">=</span><span style="color: #24292F"> (data, methods, __init) {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #8250DF">return</span><span style="color: #24292F"> () </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #953800">return</span><span style="color: #24292F"> {</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">...</span><span style="color: #953800">data</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">...</span><span style="color: #953800">methods</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #953800">__init</span></span>
+<span class="line"><span style="color: #24292F">        }</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>Inside of your component file, you can then import this function and use it to separate your data, methods and init method.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">import</span><span style="color: #24292F"> { buildComponent } </span><span style="color: #CF222E">from</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;../utils.js&#39;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">const</span><span style="color: #24292F"> </span><span style="color: #0550AE">data</span><span style="color: #24292F"> </span><span style="color: #CF222E">=</span><span style="color: #24292F"> {</span></span>
+<span class="line"><span style="color: #24292F">    message: </span><span style="color: #0A3069">&#39;Hello!&#39;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">const</span><span style="color: #24292F"> </span><span style="color: #0550AE">methods</span><span style="color: #24292F"> </span><span style="color: #CF222E">=</span><span style="color: #24292F"> {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #8250DF">clear</span><span style="color: #24292F">() {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #0550AE">this</span><span style="color: #24292F">.message </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;&#39;</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">export</span><span style="color: #953800"> </span><span style="color: #CF222E">default</span><span style="color: #953800"> </span><span style="color: #8250DF">buildComponent</span><span style="color: #953800">(</span><span style="color: #24292F">data</span><span style="color: #953800">, </span><span style="color: #24292F">methods</span><span style="color: #953800">)</span></span>
+<span class="line"></span></code></pre>
+<p>The only thing that I don't like about <em>this</em> approach is referencing <code>this</code> inside of my methods doesn't give my any autocomplete, nor is it clear what <code>this</code> is.</p>
+<h2>Laravel Blade Components</h2>
+<p>For Laravel developers, this one will most likely work the best.</p>
+<p>Instead of using regular partials, you can turn your Alpine component into a Blade component and use it like a regular HTML element.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">// components/input.blade.php</span></span>
+<span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">div</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-data</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;{ text: &#39;&#39; }&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">input</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-model</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;text&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">{{</span><span style="color: #24292F"> $attributes </span><span style="color: #0550AE">}}</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">&lt;/</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">// index.blade.php</span></span>
+<span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">x-input</span><span style="color: #24292F"> </span><span style="color: #0550AE">type</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;text&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">name</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;hello&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">id</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;hello&quot;</span><span style="color: #24292F"> /&gt;</span></span>
+<span class="line"><span style="color: #24292F">&lt;/</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<p>Unless your smaller components are being used in lots of different places, this probably won't be useful for most sites. For larger components, such as modals and dropdowns, you can nicely hide all of the logic in your component file and still pass the regular HTML attributes through.</p>
+<p>If you're using JavaScript functions to setup your component and data, you could add a custom <code>@pushonce</code> directive so that you can use inline <code>&lt;script&gt;</code> tags. The idea behind this is that you include a <code>&lt;script&gt;</code> tag with the component, inside of the <code>@pushonce</code> directive that is pushed to an <code>@stack</code> in your layout file.</p>
+<p>This approach is going to be most similar to a single file Vue component, since you have your markup, JavaScript and you could even <code>@pushonce</code> your CSS too.</p>
+<p><strong>Pros</strong>:</p>
+<ul>
+<li>Excellent reusability of both the markup and the JavaScript.</li>
+<li>Most familiar to Vue single file component pattern.</li>
+<li>Fluent use of HTML-like tags, with support for passing regular attributes through.</li>
+</ul>
+<p><strong>Cons</strong>:</p>
+<ul>
+<li>Requires Laravel (or a Blade package for external use).</li>
+<li>JavaScript being inlined with <code>@pushonce</code> can't be minified.</li>
+<li>Only really good for high usage components, no real gain for single use components.</li>
+</ul>
+<p>Here's that <code>@pushonce</code> directive for you:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #0550AE">Blade</span><span style="color: #CF222E">::</span><span style="color: #8250DF">directive</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;pushonce&#39;</span><span style="color: #24292F">, </span><span style="color: #CF222E">function</span><span style="color: #24292F"> ($expression) {</span></span>
+<span class="line"><span style="color: #24292F">    [$pushName, $pushSub] </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0550AE">explode</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;:&#39;</span><span style="color: #24292F">, </span><span style="color: #0550AE">trim</span><span style="color: #24292F">(</span><span style="color: #0550AE">substr</span><span style="color: #24292F">($expression, </span><span style="color: #0550AE">1</span><span style="color: #24292F">, </span><span style="color: #CF222E">-</span><span style="color: #0550AE">1</span><span style="color: #24292F">)));</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    $key </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;__pushonce_&#39;</span><span style="color: #CF222E">.</span><span style="color: #0550AE">str_replace</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;-&#39;</span><span style="color: #24292F">, </span><span style="color: #0A3069">&#39;_&#39;</span><span style="color: #24292F">, $pushName)</span><span style="color: #CF222E">.</span><span style="color: #0A3069">&#39;_&#39;</span><span style="color: #CF222E">.</span><span style="color: #0550AE">str_replace</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;-&#39;</span><span style="color: #24292F">, </span><span style="color: #0A3069">&#39;_&#39;</span><span style="color: #24292F">, $pushSub);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0A3069">&quot;&lt;?php if(! isset(</span><span style="color: #0550AE">\$</span><span style="color: #0A3069">__env-&gt;{</span><span style="color: #24292F">$key</span><span style="color: #0A3069">})): </span><span style="color: #0550AE">\$</span><span style="color: #0A3069">__env-&gt;{</span><span style="color: #24292F">$key</span><span style="color: #0A3069">} = 1; </span><span style="color: #0550AE">\$</span><span style="color: #0A3069">__env-&gt;startPush(&#39;{</span><span style="color: #24292F">$pushName</span><span style="color: #0A3069">}&#39;); ?&gt;&quot;</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">});</span></span>
+<span class="line"><span style="color: #24292F">				 </span></span>
+<span class="line"><span style="color: #0550AE">Blade</span><span style="color: #CF222E">::</span><span style="color: #8250DF">directive</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;endpushonce, function () {</span></span>
+<span class="line"><span style="color: #0A3069">    return &#39;</span><span style="color: #CF222E">&lt;?</span><span style="color: #0550AE">php</span><span style="color: #24292F"> $__env</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">stopPush</span><span style="color: #24292F">(); </span><span style="color: #CF222E">endif</span><span style="color: #24292F">; </span><span style="color: #CF222E">?&gt;</span><span style="color: #0A3069">&#39;;</span></span>
+<span class="line"><span style="color: #0A3069">});</span></span>
+<span class="line"></span></code></pre>
+<h3>Outside of Laravel</h3>
+<p>If you're using other frameworks, or completely different languages, most templating engines have the concept of partials where you could apply the same pattern, just without the nice HTML-ish tags.</p>
+<h2>Sign off</h2>
+<p>I'm glad you made it this far. These were just a couple of tips on organising your Alpine components and how I've personally been doing it recently.</p>
+<p>As the project evolves, there will definitely be new and improved ways to do this so I'll be sure to keep an eye out for new ideas and share them with you all too.</p>
+<p>I'd also like to say another thank you for sponsoring me, it means a lot that people are genuinely interested and support what I do. As always, all feedback is welcome no matter how good or bad it is, so let me know what you thought through <a href="https://twitter.com/ryangjchandler">Twitter</a> or Discord.</p>
+<p>Have a good one! 👋</p>
+
+    
+</body>
+</html>

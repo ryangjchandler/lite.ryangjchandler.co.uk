@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>Accessing Helper Methods in Your Livewire Components</h2>
+
+<p>Anyone who is familiar with <a href="https://laravel-livewire.com/">Livewire</a> has probably used <a href="https://laravel-livewire.com/docs/properties#computed-properties">computed properties</a> at some point. The magic behind them isn't actually all that magic.</p>
+<p>Computed properties are accessed using the <code>$this</code> context of the Blade view. Livewire has a custom Blade compiler that essentially binds an instance of the component to <code>$this</code> so that magic methods can be used to intercept calls to non-existent &quot;computed&quot; properties.</p>
+<p>This does open up some cool ideas though - one of them being helper methods on the component class.</p>
+<h2>The idea</h2>
+<p>Wouldn't it be amazing if you could change:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">select</span><span style="color: #24292F"> </span><span style="color: #0550AE">wire:model</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;selected&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">        @foreach(range(1, 100) as $number)</span></span>
+<span class="line"><span style="color: #24292F">            &lt;</span><span style="color: #116329">option</span><span style="color: #24292F"> </span><span style="color: #0550AE">value</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;{{ $number }}&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">                {{ $number }}</span></span>
+<span class="line"><span style="color: #24292F">            &lt;/</span><span style="color: #116329">option</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">        @endforeach</span></span>
+<span class="line"><span style="color: #24292F">    &lt;/</span><span style="color: #116329">select</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    </span></span>
+<span class="line"><span style="color: #24292F">    @if($selected &gt; 0 &amp;&amp; $selected % 2 === 0 &amp;&amp; $selected </span><span style="color: #82071E; font-style: italic">&lt;</span><span style="color: #24292F"> 50)</span></span>
+<span class="line"><span style="color: #24292F">        &lt;</span><span style="color: #116329">strong</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">            Congrats! Your number is even and in the correct range!</span></span>
+<span class="line"><span style="color: #24292F">        &lt;/</span><span style="color: #116329">strong</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    @endif</span></span>
+<span class="line"><span style="color: #24292F">&lt;/</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<p>Into this:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">select</span><span style="color: #24292F"> </span><span style="color: #0550AE">wire:model</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;selected&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">        @foreach($this-&gt;range() as $number)</span></span>
+<span class="line"><span style="color: #24292F">            &lt;</span><span style="color: #116329">option</span><span style="color: #24292F"> </span><span style="color: #0550AE">value</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;{{ $number }}&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">                {{ $number }}</span></span>
+<span class="line"><span style="color: #24292F">            &lt;/</span><span style="color: #116329">option</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">        @endforeach</span></span>
+<span class="line"><span style="color: #24292F">    &lt;/</span><span style="color: #116329">select</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    </span></span>
+<span class="line"><span style="color: #24292F">    @if($this-&gt;selectionIsValid())</span></span>
+<span class="line"><span style="color: #24292F">        &lt;</span><span style="color: #116329">strong</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">            Congrats! Your number is even and in the correct range!</span></span>
+<span class="line"><span style="color: #24292F">        &lt;/</span><span style="color: #116329">strong</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    @endif</span></span>
+<span class="line"><span style="color: #24292F">&lt;/</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<p>All of the logic for the iterable value and whether or not a valid selection has been can be moved out of the view and into the component class.</p>
+<h2>The how</h2>
+<p>It's not difficult. Move all of the logic into methods on the component class and Bob's your uncle, you've refactored to helper methods on your component class.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">class</span><span style="color: #24292F"> </span><span style="color: #953800">Selection</span><span style="color: #24292F"> </span><span style="color: #CF222E">extends</span><span style="color: #24292F"> </span><span style="color: #0550AE">Component</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">range</span><span style="color: #24292F">()</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0550AE">range</span><span style="color: #24292F">(</span><span style="color: #0550AE">1</span><span style="color: #24292F">, </span><span style="color: #0550AE">100</span><span style="color: #24292F">);</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">    </span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">selectedIsValid</span><span style="color: #24292F">()</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">selected </span><span style="color: #CF222E">&gt;</span><span style="color: #24292F"> </span><span style="color: #0550AE">0</span><span style="color: #24292F"> </span><span style="color: #CF222E">&amp;&amp;</span><span style="color: #24292F"> </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">selected </span><span style="color: #CF222E">&lt;</span><span style="color: #24292F"> </span><span style="color: #0550AE">50</span><span style="color: #24292F"> </span><span style="color: #CF222E">&amp;&amp;</span><span style="color: #24292F"> </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">selected </span><span style="color: #CF222E">%</span><span style="color: #24292F"> </span><span style="color: #0550AE">2</span><span style="color: #24292F"> </span><span style="color: #CF222E">===</span><span style="color: #24292F"> </span><span style="color: #0550AE">0</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<h2>The why</h2>
+<p>Personally, I like this approach since it my views are clearer and easier to follow. I'm not having to search through a clouded chunk of conditional mayhem to find out where something is being output. Instead, I can use appropriately named methods to describe the condition being checked and move on with my life.</p>
+<p>Another benefit is that I can now use any <code>protected</code> or <code>private</code> dependencies from my class without needing to explicitely pass them through to the view, or use a computed property.</p>
+<h2>Sign off</h2>
+<p>If you found this little trick useful, let me know on <a href="https://twitter.com/ryangjchandler">Twitter</a> and share some examples of where you have benefited from it.</p>
+<p><strong>Note</strong>: This feature isn't documented as part of Livewire's public API, so there could be some unexpected behaviour if used incorrectly. The same API is used for computed properties so without a major version update and breaking changes, this is unlikely going to change any time soon.</p>
+
+    
+</body>
+</html>

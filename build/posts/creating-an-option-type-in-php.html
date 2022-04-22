@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>Creating an `Option` Type in PHP</h2>
+
+<p>If you've ever worked with the Rust language, you've likely run into <code>Option</code>.</p>
+<p>There is no concept of <code>null</code> or <code>nil</code> in Rust, nor is there any concept of optional parameters in function definitions.</p>
+<p>This is one of the things that makes Rust's type system so powerful, reliable and, at times, annoying.</p>
+<p>The <code>Option</code> type itself is actually just an <code>enum</code> (enumeration) that is defined as:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">enum</span><span style="color: #24292F"> </span><span style="color: #953800">Option</span><span style="color: #24292F">&lt;</span><span style="color: #953800">T</span><span style="color: #24292F">&gt; {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #953800">Some</span><span style="color: #24292F">(</span><span style="color: #953800">T</span><span style="color: #24292F">),</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #953800">None</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<blockquote>
+<p>In Rust, enums are able to hold values inside of variants. This is something that <a href="https://wiki.php.net/rfc/tagged_unions">has been thought of</a> in PHP land too.</p>
+</blockquote>
+<p>Rust provides some global constructors for the <code>Option</code> type too. You don't need to type <code>Option::Some(value)</code> everytime, you can just type <code>Some(value)</code>.</p>
+<p>If you were to add an optional parameter to a function, it would look something like this:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">fn</span><span style="color: #24292F"> </span><span style="color: #8250DF">hello</span><span style="color: #24292F">(name</span><span style="color: #CF222E">:</span><span style="color: #24292F"> </span><span style="color: #953800">Option</span><span style="color: #24292F">&lt;</span><span style="color: #953800">String</span><span style="color: #24292F">&gt;) {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">let</span><span style="color: #24292F"> name </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #CF222E">if</span><span style="color: #24292F"> name</span><span style="color: #CF222E">.</span><span style="color: #8250DF">is_some</span><span style="color: #24292F">() {</span></span>
+<span class="line"><span style="color: #24292F">        name</span><span style="color: #CF222E">.</span><span style="color: #8250DF">unwrap</span><span style="color: #24292F">()</span></span>
+<span class="line"><span style="color: #24292F">    } </span><span style="color: #CF222E">else</span><span style="color: #24292F"> {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #0A3069">&quot;World!&quot;</span><span style="color: #CF222E">.</span><span style="color: #8250DF">to_string</span><span style="color: #24292F">()</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #8250DF">println!</span><span style="color: #24292F">(</span><span style="color: #0A3069">&quot;Hello, {}&quot;</span><span style="color: #24292F">, name)</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>Again, the <code>Option</code> enum is generic so you need to provide the type of the wrapped value.</p>
+<p>Calling <code>unwrap()</code> on the <code>Option</code> will return the inner value, in this case a <code>String</code>. If the <code>Option</code> is <code>None</code>, then the program panics and fails to run.</p>
+<h2>Why is this better?</h2>
+<p>The <code>Option</code> type is best used in situations where you <em>sometimes</em> return a value from a function (typically an object).</p>
+<p>It's not uncommon to forget about the cases where no value, or <code>null</code>, is returned from the function.</p>
+<p>By introducing an <code>Option</code> type you have to explicitly handle the <code>None</code> or <code>null</code> case, otherwise you won't be able to access the wrapped value.</p>
+<p>Here's an example in a Laravel application:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">$name </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0550AE">Auth</span><span style="color: #CF222E">::</span><span style="color: #8250DF">user</span><span style="color: #24292F">()</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">name;</span></span>
+<span class="line"></span></code></pre>
+<p>If the user is logged in this code will work fine. If the user isn't logged in, <code>Auth::user()</code> will return <code>null</code> and the <code>-&gt;name</code> access will error out.</p>
+<p>In PHP 8, you could handle this with the <code>?-&gt;</code> (nullsafe) operator but you would still end up with a <code>null</code> value in <code>$name</code>.</p>
+<p>If the <code>Auth::user()</code> function used <code>Option</code>:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">user</span><span style="color: #24292F">()</span><span style="color: #CF222E">:</span><span style="color: #24292F"> </span><span style="color: #0550AE">Option</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">user </span><span style="color: #CF222E">?</span><span style="color: #24292F"> </span><span style="color: #CF222E">new</span><span style="color: #24292F"> </span><span style="color: #0550AE">Some</span><span style="color: #24292F">(</span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">user) </span><span style="color: #CF222E">:</span><span style="color: #24292F"> </span><span style="color: #CF222E">new</span><span style="color: #24292F"> </span><span style="color: #0550AE">None</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>To access the <code>User</code>, you would need to do something like this:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">$user </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0550AE">Auth</span><span style="color: #CF222E">::</span><span style="color: #8250DF">user</span><span style="color: #24292F">()</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">unwrap</span><span style="color: #24292F">();</span></span>
+<span class="line"></span></code></pre>
+<p>If <code>None</code> is returned from the <code>Auth::user()</code> function, the <code>unwrap()</code> method call will fail and throw an <code>Exception</code> because you can't <code>unwrap</code> a <code>None</code> value.</p>
+<p>You have to explicitly consider the <code>None</code> scenario when working with <code>Option</code>.</p>
+<h2>Creating the type</h2>
+<p>We can start by defining an <code>interface</code> for our <code>Option</code> type that the <code>Some</code> and <code>None</code> types will implement.</p>
+<blockquote>
+<p>I'll be writing PHP 8.0 compatible code. If you haven't upgraded already, you definitely should.</p>
+</blockquote>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">interface</span><span style="color: #24292F"> </span><span style="color: #953800">Option</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">isSome</span><span style="color: #24292F">()</span><span style="color: #CF222E">:</span><span style="color: #24292F"> </span><span style="color: #CF222E">bool</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">isNone</span><span style="color: #24292F">()</span><span style="color: #CF222E">:</span><span style="color: #24292F"> </span><span style="color: #CF222E">bool</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">unwrap</span><span style="color: #24292F">()</span><span style="color: #CF222E">:</span><span style="color: #24292F"> </span><span style="color: #CF222E">mixed</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>These three functions are the bare essentials. You'll be able to determine if a type is <code>None</code>, <code>Some</code> and retrieve the internal value.</p>
+<h3><code>None</code></h3>
+<p>With this interface defined, we can go ahead and create our <code>None</code> type.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">class</span><span style="color: #24292F"> </span><span style="color: #953800">None</span><span style="color: #24292F"> </span><span style="color: #CF222E">implements</span><span style="color: #24292F"> </span><span style="color: #0550AE">Option</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">isSome</span><span style="color: #24292F">()</span><span style="color: #CF222E">:</span><span style="color: #24292F"> </span><span style="color: #CF222E">bool</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0550AE">false</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">isNone</span><span style="color: #24292F">()</span><span style="color: #CF222E">:</span><span style="color: #24292F"> </span><span style="color: #CF222E">bool</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0550AE">true</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">unwrap</span><span style="color: #24292F">()</span><span style="color: #CF222E">:</span><span style="color: #24292F"> </span><span style="color: #CF222E">mixed</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">throw</span><span style="color: #24292F"> </span><span style="color: #CF222E">new</span><span style="color: #24292F"> </span><span style="color: #0550AE">\RuntimeException</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;Attempt to call `unwrap()` on `None` value&#39;</span><span style="color: #24292F">);</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>The <code>None</code> type is the simplest. The <code>unwrap()</code> method will throw a <code>\RuntimeException</code> as you can't unwrap a <code>None</code> value.</p>
+<blockquote>
+<p>In PHP 8.1 you could replace the <code>mixed</code> return type with <code>never</code> as it always throws a <code>\RuntimeException</code>.</p>
+</blockquote>
+<h3><code>Some</code></h3>
+<p>The <code>Some</code> type has a little more going on. We need to define a <code>__construct</code> method to actually hold the value and also return that value from <code>unwrap()</code>.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">class</span><span style="color: #24292F"> </span><span style="color: #953800">Some</span><span style="color: #24292F"> </span><span style="color: #CF222E">implements</span><span style="color: #24292F"> </span><span style="color: #0550AE">Option</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #0550AE">__construct</span><span style="color: #24292F">(</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">protected</span><span style="color: #24292F"> </span><span style="color: #CF222E">mixed</span><span style="color: #24292F"> $value</span></span>
+<span class="line"><span style="color: #24292F">    ) {}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">isSome</span><span style="color: #24292F">()</span><span style="color: #CF222E">:</span><span style="color: #24292F"> </span><span style="color: #CF222E">bool</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0550AE">true</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">isNone</span><span style="color: #24292F">()</span><span style="color: #CF222E">:</span><span style="color: #24292F"> </span><span style="color: #CF222E">bool</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0550AE">false</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">unwrap</span><span style="color: #24292F">()</span><span style="color: #CF222E">:</span><span style="color: #24292F"> </span><span style="color: #CF222E">mixed</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">value;</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>With these implemented, we can go ahead and write our first function that uses <code>Option</code>.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">sayHello</span><span style="color: #24292F">(</span><span style="color: #0550AE">Option</span><span style="color: #24292F"> $name) {</span></span>
+<span class="line"><span style="color: #24292F">    $name </span><span style="color: #CF222E">=</span><span style="color: #24292F"> $name</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">isNone</span><span style="color: #24292F">() </span><span style="color: #CF222E">?</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;World&#39;</span><span style="color: #24292F"> </span><span style="color: #CF222E">:</span><span style="color: #24292F"> $name</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">unwrap</span><span style="color: #24292F">();</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0550AE">echo</span><span style="color: #24292F"> </span><span style="color: #0A3069">&quot;Hello, {</span><span style="color: #24292F">$name</span><span style="color: #0A3069">}!&quot;</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #8250DF">sayHello</span><span style="color: #24292F">(</span><span style="color: #CF222E">new</span><span style="color: #24292F"> </span><span style="color: #0550AE">None</span><span style="color: #24292F">);         </span><span style="color: #6E7781">// Outputs &quot;Hello, World!&quot;</span></span>
+<span class="line"><span style="color: #8250DF">sayHello</span><span style="color: #24292F">(</span><span style="color: #CF222E">new</span><span style="color: #24292F"> </span><span style="color: #0550AE">Some</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;Ryan&#39;</span><span style="color: #24292F">)); </span><span style="color: #6E7781">// Outputs &quot;Hello, Ryan!&quot;</span></span>
+<span class="line"></span></code></pre>
+<h3><code>unwrapOr()</code></h3>
+<p>When you start using <code>Option</code>, you'll find yourself using <code>?:</code> (ternaries) or <code>if..else</code> statements to set default values.</p>
+<p>We can help ourselves out by introducing a new <code>unwrapOr(mixed $or)</code> method.</p>
+<p>Let's first add it to our <code>Option</code> interface.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">interface</span><span style="color: #24292F"> </span><span style="color: #953800">Option</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">unwrapOr</span><span style="color: #24292F">(</span><span style="color: #CF222E">mixed</span><span style="color: #24292F"> $or)</span><span style="color: #CF222E">:</span><span style="color: #24292F"> </span><span style="color: #CF222E">mixed</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>And then implement in our <code>Some</code> and <code>None</code> classes.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">class</span><span style="color: #24292F"> </span><span style="color: #953800">Some</span><span style="color: #24292F"> </span><span style="color: #CF222E">implements</span><span style="color: #24292F"> </span><span style="color: #0550AE">Option</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">unwrapOr</span><span style="color: #24292F">(</span><span style="color: #CF222E">mixed</span><span style="color: #24292F"> $or)</span><span style="color: #CF222E">:</span><span style="color: #24292F"> </span><span style="color: #CF222E">mixed</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">unwrap</span><span style="color: #24292F">();</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>The <code>Some</code> class should always hold a value, so we will never need to return the <code>$or</code>.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">class</span><span style="color: #24292F"> </span><span style="color: #953800">None</span><span style="color: #24292F"> </span><span style="color: #CF222E">implements</span><span style="color: #24292F"> </span><span style="color: #0550AE">Option</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">unwrapOr</span><span style="color: #24292F">(</span><span style="color: #CF222E">mixed</span><span style="color: #24292F"> $or)</span><span style="color: #CF222E">:</span><span style="color: #24292F"> </span><span style="color: #CF222E">mixed</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">return</span><span style="color: #24292F"> $or;</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>The <code>None</code> class can never be unwrapped so we will always return the value of <code>$or</code>.</p>
+<p>With this method in place, we can remove the ternary from our <code>sayHello()</code> function:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">sayHello</span><span style="color: #24292F">(</span><span style="color: #0550AE">Option</span><span style="color: #24292F"> $name) {</span></span>
+<span class="line"><span style="color: #24292F">    $name </span><span style="color: #CF222E">=</span><span style="color: #24292F"> $name</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">unwrapOr</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;World&#39;</span><span style="color: #24292F">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0550AE">echo</span><span style="color: #24292F"> </span><span style="color: #0A3069">&quot;Hello, {</span><span style="color: #24292F">$name</span><span style="color: #0A3069">}!&quot;</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<h2>Generics</h2>
+<p>PHP doesn't support runtime generics. There is no first-party syntax for them either.</p>
+<p>We're very fortunate to have static analysis engines though, so we can use DocBlocks to imitate generic types.</p>
+<p>Let's start by adding some annotations to your <code>Option</code> interface.</p>
+<blockquote>
+<p>I'll be using annotations supported by <a href="https://github.com/phpstan/phpstan">PHPStan</a>.</p>
+</blockquote>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #6E7781">/**</span></span>
+<span class="line"><span style="color: #6E7781"> * @template T</span></span>
+<span class="line"><span style="color: #6E7781"> */</span></span>
+<span class="line"><span style="color: #CF222E">interface</span><span style="color: #24292F"> </span><span style="color: #953800">Option</span><span style="color: #24292F"> {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #6E7781">// ...</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>This makes the <code>Option</code> type generic on <code>T</code>. To actually make <code>T</code> do something, we'll need to tell the analyser where <code>T</code> comes from.</p>
+<p>Let's add some annotations to the <code>Some</code> type.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #6E7781">/**</span></span>
+<span class="line"><span style="color: #6E7781"> * @template T</span></span>
+<span class="line"><span style="color: #6E7781"> *</span></span>
+<span class="line"><span style="color: #6E7781"> * @implements \Option&lt;T&gt;</span></span>
+<span class="line"><span style="color: #6E7781"> */</span></span>
+<span class="line"><span style="color: #CF222E">class</span><span style="color: #24292F"> </span><span style="color: #953800">Some</span><span style="color: #24292F"> </span><span style="color: #CF222E">implements</span><span style="color: #24292F"> </span><span style="color: #0550AE">Option</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #6E7781">// ...</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>These class-level annotations will tell the analyser that the <code>Some</code> class is also generic and that the type of <code>T</code> in <code>Some</code> should also be used as the generic type of <code>Option</code> which we're implementing.</p>
+<p>Since our <code>unwrap()</code> and <code>unwrapOr()</code> method return a <code>mixed</code> type inside of <code>Some</code>, we can't guarantee that any further method calls or property access is valid.</p>
+<p>To tackle this we can add more annotations to those methods, as well as the property promotion in our constructor.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #6E7781">/**</span></span>
+<span class="line"><span style="color: #6E7781"> * @template T</span></span>
+<span class="line"><span style="color: #6E7781"> *</span></span>
+<span class="line"><span style="color: #6E7781"> * @implements \Option&lt;T&gt;</span></span>
+<span class="line"><span style="color: #6E7781"> */</span></span>
+<span class="line"><span style="color: #CF222E">class</span><span style="color: #24292F"> </span><span style="color: #953800">Some</span><span style="color: #24292F"> </span><span style="color: #CF222E">implements</span><span style="color: #24292F"> </span><span style="color: #0550AE">Option</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #0550AE">__construct</span><span style="color: #24292F">(</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #6E7781">/** </span><span style="color: #CF222E">@var</span><span style="color: #6E7781"> </span><span style="color: #0550AE">T</span><span style="color: #6E7781"> */</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">protected</span><span style="color: #24292F"> </span><span style="color: #CF222E">mixed</span><span style="color: #24292F"> $value</span></span>
+<span class="line"><span style="color: #24292F">    ) {}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #6E7781">/**</span></span>
+<span class="line"><span style="color: #6E7781">     * </span><span style="color: #CF222E">@return</span><span style="color: #6E7781"> </span><span style="color: #0550AE">T</span></span>
+<span class="line"><span style="color: #6E7781">     */</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">unwrap</span><span style="color: #24292F">()</span><span style="color: #CF222E">:</span><span style="color: #24292F"> </span><span style="color: #CF222E">mixed</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">value;</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #6E7781">/**</span></span>
+<span class="line"><span style="color: #6E7781">     * </span><span style="color: #CF222E">@return</span><span style="color: #6E7781"> </span><span style="color: #0550AE">T</span></span>
+<span class="line"><span style="color: #6E7781">     */</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">unwrapOr</span><span style="color: #24292F">(</span><span style="color: #CF222E">mixed</span><span style="color: #24292F"> $or)</span><span style="color: #CF222E">:</span><span style="color: #24292F"> </span><span style="color: #CF222E">mixed</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">unwrap</span><span style="color: #24292F">();</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>Adding the <code>@var</code> annotation to the promoted property, the analyser will figure out that the type of <code>$value</code> should be used as <code>T</code>.</p>
+<p>It can then detect any problems with <code>unwrap</code> and <code>unwrapOr</code> calls.</p>
+<h2>Possible Refactoring</h2>
+<p>I've implemented everything inside of an <code>Option</code> interface and 2 classes that implement that interface.</p>
+<p>This means that our <code>Some</code> and <code>None</code> classes have to implement <em>all</em> of the methods that are part of the contract.</p>
+<p>It's not the prettiest thing ever, so if you wanted to refactor this you could instead create an <code>abstract class Option</code> that the <code>Some</code> and <code>None</code> classes extend.</p>
+<p>You can then implement the methods inside of the <code>abstract</code> class instead and reduce some of the duplication between the two option types.</p>
+<h2>PHP 8.1 and beyond</h2>
+<p>PHP 8.1 will be introducing first-party <code>enum</code> types. This brings us one tiny step closer to a Rust-like implementation:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #0550AE">enum</span><span style="color: #24292F"> </span><span style="color: #0550AE">Option</span><span style="color: #24292F"> {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">case</span><span style="color: #24292F"> </span><span style="color: #0550AE">Some</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">case</span><span style="color: #24292F"> </span><span style="color: #0550AE">None</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>The only differences between the two languages would be that fact that PHP can't hold values inside of enum variants and that they can't be generically typed.</p>
+<p>I hope that PHP will get tagged enums in the near future. This <a href="https://wiki.php.net/rfc/tagged_unions">draft RFC has already started</a> the conversation.</p>
+<p>With tagged enums, we could have something like this:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #0550AE">enum</span><span style="color: #24292F"> </span><span style="color: #0550AE">Option</span><span style="color: #24292F"> {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">case</span><span style="color: #24292F"> </span><span style="color: #8250DF">Some</span><span style="color: #24292F">(</span><span style="color: #CF222E">private</span><span style="color: #24292F"> $value);</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">case</span><span style="color: #24292F"> </span><span style="color: #0550AE">None</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>Add some generics ontop and we have a slightly more verbose but more powerful <code>Option</code> type.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #0550AE">enum</span><span style="color: #24292F"> </span><span style="color: #0550AE">Option</span><span style="color: #CF222E">&lt;</span><span style="color: #0550AE">T</span><span style="color: #CF222E">&gt;</span><span style="color: #24292F"> {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">case</span><span style="color: #24292F"> </span><span style="color: #8250DF">Some</span><span style="color: #24292F">(</span><span style="color: #CF222E">private</span><span style="color: #24292F"> </span><span style="color: #0550AE">T</span><span style="color: #24292F"> $value);</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">case</span><span style="color: #24292F"> </span><span style="color: #0550AE">None</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+
+    
+</body>
+</html>

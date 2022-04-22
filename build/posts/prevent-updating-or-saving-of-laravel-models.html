@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>Prevent Updating or Saving of Laravel Models</h2>
+
+<p>For example, after a model gets created I don't want anyone to be able to update that record again. Instead, it should get overwritten with a brand new record and archived.</p>
+<p>Here's a simple trait that you can use on your models to disable updating:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">trait</span><span style="color: #24292F"> </span><span style="color: #953800">PreventsUpdating</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">static</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">bootPreventsUpdating</span><span style="color: #24292F">()</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">static::</span><span style="color: #8250DF">updating</span><span style="color: #24292F">(</span><span style="color: #CF222E">function</span><span style="color: #24292F"> (</span><span style="color: #0550AE">Model</span><span style="color: #24292F"> $model) {</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0550AE">false</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">        });</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>Simply use this on your model and you will no longer be able to update it.</p>
+<h3>Improvements</h3>
+<p>We could take this a step further and make it more reusable and DRY-er.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">trait</span><span style="color: #24292F"> </span><span style="color: #953800">PreventsModelEvents</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">static</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">bootPreventsModelEvents</span><span style="color: #24292F">()</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">foreach</span><span style="color: #24292F"> (</span><span style="color: #CF222E">static::</span><span style="color: #24292F">$prevents </span><span style="color: #CF222E">as</span><span style="color: #24292F"> $event) {</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">static::</span><span style="color: #24292F">{$event}(</span><span style="color: #CF222E">function</span><span style="color: #24292F"> (</span><span style="color: #0550AE">Model</span><span style="color: #24292F"> $model) {</span></span>
+<span class="line"><span style="color: #24292F">                </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0550AE">false</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">            });</span></span>
+<span class="line"><span style="color: #24292F">        }</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>Now when we want to use it on a model, we can do this:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">class</span><span style="color: #24292F"> </span><span style="color: #953800">User</span><span style="color: #24292F"> </span><span style="color: #CF222E">extends</span><span style="color: #24292F"> </span><span style="color: #0550AE">Model</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">PreventsModelEvents</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">protected</span><span style="color: #24292F"> </span><span style="color: #CF222E">static</span><span style="color: #24292F"> $prevents </span><span style="color: #CF222E">=</span><span style="color: #24292F"> [</span><span style="color: #0A3069">&#39;updating&#39;</span><span style="color: #24292F">];</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>When we try to update our <code>User</code> model, it will be stopped and will return false. This can be applied to the other events such as <code>saving</code> and <code>creating</code> too.</p>
+
+    
+</body>
+</html>

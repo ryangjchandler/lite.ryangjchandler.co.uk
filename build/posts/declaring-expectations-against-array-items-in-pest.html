@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>Declaring Expectations Against Array Items in Pest</h2>
+
+<p><a href="https://pestphp.com/">Pest</a> has an incredible <a href="https://pestphp.com/docs/expectations">Expectations API</a> that you can use when writing your tests.</p>
+<p>It provides a fluent builder pattern for declaring expectations and making assertions against your data.</p>
+<p>Here's a very simple example:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">$names </span><span style="color: #CF222E">=</span><span style="color: #24292F"> [</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0A3069">&#39;Ryan&#39;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0A3069">&#39;John&#39;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0A3069">&#39;Jane&#39;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">];</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #8250DF">expect</span><span style="color: #24292F">($names)</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">toBeArray</span><span style="color: #24292F">()</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">toHaveCount</span><span style="color: #24292F">(</span><span style="color: #0550AE">3</span><span style="color: #24292F">)</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">toMatchArray</span><span style="color: #24292F">([</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #0A3069">&#39;Ryan&#39;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #0A3069">&#39;John&#39;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #0A3069">&#39;Jane&#39;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">    ]);</span></span>
+<span class="line"></span></code></pre>
+<p>Each of the method calls makes an assertion on the data provided to <code>expect()</code>.</p>
+<p>When you're working with objects, you can also use <a href="https://pestphp.com/docs/expectations#higher-order-expectations">higher-order expectations</a> to make assertions against properties and method return values.</p>
+<p>One tricky problem that I have faced today is that you can't use the <code>HigherOrderExpectation</code> object as an array.</p>
+<p>This prevents you from doing something like this:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">$object </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #CF222E">new</span><span style="color: #24292F"> </span><span style="color: #CF222E">class</span><span style="color: #24292F"> {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">getNames</span><span style="color: #24292F">()</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">return</span><span style="color: #24292F"> [</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #0A3069">&#39;Ryan&#39;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #0A3069">&#39;John&#39;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #0A3069">&#39;Jane&#39;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">        ];</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">};</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #8250DF">expect</span><span style="color: #24292F">($object)</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">getNames</span><span style="color: #24292F">()[</span><span style="color: #0550AE">0</span><span style="color: #24292F">]</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">toBe</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;Ryan&#39;</span><span style="color: #24292F">);</span></span>
+<span class="line"></span></code></pre>
+<p>When you call <code>getNames()</code>, the <code>HigherOrderExpectation</code> class will proxy that method call to the original object that was passed in and return a new instance of <code>HigherOrderExpectation</code> with the return value of the method inside.</p>
+<p>It does this because the method doesn't explicitly exist on the <code>HigherOrderExpecation</code> class or the <code>Expectation</code> class.</p>
+<p>It does the same for properties too. The <code>retrieve()</code> method that is used to proxy the property access actually checks whether the base value is an array or not.</p>
+<p>If the value is an array, it will take the property name and try to find a value with that key.</p>
+<p>Unfortunately PHP doesn't let you use numeric values when accessing properties, so something like <code>$object-&gt;0</code> fails.</p>
+<p>What you can do instead is use PHP's <code>{}</code> interpolation syntax to create dynamically access a property. Pest will then attempt to find an array with that key and return an instance of <code>HigherOrderExpectation</code> with that value.</p>
+<p>This means we can test individual array items with the Expectation API.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #8250DF">expect</span><span style="color: #24292F">($object)</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">getNames</span><span style="color: #24292F">()</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">{</span><span style="color: #0550AE">0</span><span style="color: #24292F">}</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">toBe</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;Ryan&#39;</span><span style="color: #24292F">);</span></span>
+<span class="line"></span></code></pre>
+<p>This would return the value as index <code>0</code> so that we can perform assertions.</p>
+<p>If you had non-numeric array keys, you can use the normal property access syntax as Pest will proxy those to the array.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">$ages </span><span style="color: #CF222E">=</span><span style="color: #24292F"> [</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0A3069">&#39;Ryan&#39;</span><span style="color: #24292F"> </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> </span><span style="color: #0550AE">100</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">];</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #8250DF">expect</span><span style="color: #24292F">($ages)</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">Ryan</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">toBe</span><span style="color: #24292F">(</span><span style="color: #0550AE">100</span><span style="color: #24292F">);</span></span>
+<span class="line"></span></code></pre>
+<blockquote>
+<p>I do have a work in progress branch that adds support for the <code>[]</code> syntax as it definitely feels more familiar, but in some cases the syntax is a bit strange, e.g. <code>expect($value)[0]-&gt;toBe('Ryan')[1]-&gt;toBe('John')</code></p>
+</blockquote>
+
+    
+</body>
+</html>

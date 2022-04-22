@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>3 Simple Alpine.js Tips and Tricks</h2>
+
+<blockquote>
+<p>This article has been written based on functionality in Alpine.js v2.x - when a new major version is released or any of these tips are no longer applicable, I'll be sure to update it.</p>
+</blockquote>
+<h2>1. Keep your components small</h2>
+<p>When Alpine encounters a new component or some of your state changes, it walks the DOM tree of that component. This means that if you have a larger component, you might notice an impact on performance because there is more DOM to walk.</p>
+<p>This is why it's always a good idea to keep your markup small and avoid putting <code>x-data</code> attributes on the <code>&lt;body&gt;</code>, especially when you've got a big page.</p>
+<p>You'll probably notice a performance impact on <em>huge</em> components, but it's always good to keep in mind because each small performance impact adds up to a larger one.</p>
+<h2>2. Extract helpers into mixins</h2>
+<p>Since Alpine.js uses a regular JavaScript object, we can take advantage of the &quot;spread&quot; operator. This means we can compose an object using the return value of multiple functions or separate object literals.</p>
+<p>Here's an example:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">form</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-data</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;{ ...validationHelpers(), name: &#39;&#39; }&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">@submit.prevent</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;validate({ name: &#39;required&#39; })&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">input</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-model</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;name&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">name</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;name&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">id</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;name&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">&lt;/</span><span style="color: #116329">form</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<p>Here is what the <code>validationHelpers</code> function might look like:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">validationHelpers</span><span style="color: #24292F">() {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">return</span><span style="color: #24292F"> {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #8250DF">validate</span><span style="color: #24292F">(</span><span style="color: #953800">rules</span><span style="color: #24292F">) {</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #0550AE">Object</span><span style="color: #24292F">.</span><span style="color: #8250DF">entries</span><span style="color: #24292F">(rules).</span><span style="color: #8250DF">forEach</span><span style="color: #24292F">(([</span><span style="color: #953800">field</span><span style="color: #24292F">, </span><span style="color: #953800">rules</span><span style="color: #24292F">]) </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> { </span><span style="color: #CF222E">...</span><span style="color: #24292F"> });</span></span>
+<span class="line"><span style="color: #24292F">        }</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>The <code>...</code> operator will take the entries from the object returned by <code>validationHelpers</code> and add them to our data object. This lets us use them directly in our component whilst keeping the logic separated from the component's own.</p>
+<p>The validation example is definitely a good use-case for this sort of thing. You might also use it for transition helpers, class name generators and a plethora of other things.</p>
+<h2>3. Alpine.js DevTools</h2>
+<p>If you didn't already know, there is a third-party Chrome and Firefox extension that provides some handy DevTools for Alpine. You can see all of the components on the page, inspect the data for each one and even modify it in real-time.</p>
+<p>Soon you'll also be able to watch for any Alpine related errors, track events being dispatched by components and more.</p>
+<p>If you don't already have it installed, follow the <a href="https://github.com/alpine-collective/alpinejs-devtools">instructions in the repository</a>!</p>
+
+    
+</body>
+</html>

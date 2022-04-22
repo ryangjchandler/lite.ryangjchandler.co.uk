@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>Baby's First Virtual Machine</h2>
+
+<p>In this post, I'll be showing you how to build your first stack-based virtual machine with JavaScript.</p>
+<p>At the end of the post, we'll be able to provide our virtual machine with a few mathematical instructions and it will be able to run through those instructions and produce an answer.</p>
+<p>We'll be using JavaScript to build our virtual machine so that we don't get lost in type-system details. Most people can read and understand JavaScript too, so it's great for teaching new concepts.</p>
+<h2>What is a virtual machine?</h2>
+<p>Before we look at how to build one, let's briefly talk about what a virtual machine is.</p>
+<p>At the highest level, a virtual machine is just a software-implementation of a computer. It loosely simulates the behaviour of a CPU by reading instructions and performing actions based on those instructions. Virtual machines are commonly used by programming languages to implement their interpretation layer. This is where the programming language actually does most of the logical work.</p>
+<h3>What is a stack machine?</h3>
+<p>There are many types of virtual-machine, so to keep things simple we'll be building one of the simplest.</p>
+<p>A stack-based virtual machine uses the <strong>stack</strong> to, more often than not, store short-lived temporary values. You can think of the stack as an array that is constantly being pushed to, as well as popped from.</p>
+<p>When you encounter some form of value, you will generally push that value to the stack. When you encounter an instruction, it will likely need some sort of argument to operate or (commonly known as an <strong>operand</strong>). This argument is retrieved from the stack by popping it from the end, removing it from the stack completely.</p>
+<h2>Instructions and Operands</h2>
+<p>Our virtual machine is going to act a simple calculator. We'll be able to <code>ADD</code>, <code>SUBTRACT</code>, <code>DIVIDE</code>, <code>MULITPLY</code> and <code>PRINT</code> values using a combination of instructions and values.</p>
+<p>Let's take a look at a simple <code>ADD</code> instruction. We'll start off by creating a global constant in our program called <code>ADD</code> and use it's string equivalent as the value.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">const</span><span style="color: #24292F"> </span><span style="color: #0550AE">ADD</span><span style="color: #24292F"> </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;ADD&#39;</span><span style="color: #24292F">;</span></span>
+<span class="line"></span></code></pre>
+<p>Let's also create an array to store our instructions in.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">const</span><span style="color: #24292F"> </span><span style="color: #0550AE">ADD</span><span style="color: #24292F"> </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;ADD&#39;</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">const</span><span style="color: #24292F"> </span><span style="color: #0550AE">instructions</span><span style="color: #24292F"> </span><span style="color: #CF222E">=</span><span style="color: #24292F"> [</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0550AE">ADD</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">];</span></span>
+<span class="line"></span></code></pre>
+<p>If you think of the <code>+</code> operation in a mathematical equation, you have 2 operands. The equation <code>1 + 2</code> is adding the numbers <code>1</code> and <code>2</code> together, making them the operands in the equation.</p>
+<p>Our <code>ADD</code> instruction will behave in the exact same way. We will need to provide 2 numbers for it to function correctly. The simplest way to do this is by adding them to the <code>instructions</code> array <em>before</em> our <code>ADD</code> instruction.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">const</span><span style="color: #24292F"> </span><span style="color: #0550AE">instructions</span><span style="color: #24292F"> </span><span style="color: #CF222E">=</span><span style="color: #24292F"> [</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0550AE">1</span><span style="color: #24292F">, </span><span style="color: #0550AE">2</span><span style="color: #24292F">, </span><span style="color: #0550AE">ADD</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">];</span></span>
+<span class="line"></span></code></pre>
+<p>We place them before the instruction so that the <code>ADD</code> instruction can <em>pop</em> them off of the stack and then add them together. To show this in action, let's start creating our main evaluation loop as well as our stack.</p>
+<p>We'll use a <code>for..of</code> loop so that we can have direct access to the instruction, as opposed to the instruction's index in the array.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">const</span><span style="color: #24292F"> </span><span style="color: #0550AE">stack</span><span style="color: #24292F"> </span><span style="color: #CF222E">=</span><span style="color: #24292F"> [];</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">for</span><span style="color: #24292F"> (</span><span style="color: #CF222E">const</span><span style="color: #24292F"> </span><span style="color: #0550AE">instruction</span><span style="color: #24292F"> </span><span style="color: #CF222E">of</span><span style="color: #24292F"> instructions) {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">if</span><span style="color: #24292F"> (</span><span style="color: #CF222E">!</span><span style="color: #24292F"> </span><span style="color: #0550AE">Number</span><span style="color: #24292F">.</span><span style="color: #8250DF">isNaN</span><span style="color: #24292F">(instruction)) {</span></span>
+<span class="line"><span style="color: #24292F">        stack.</span><span style="color: #8250DF">push</span><span style="color: #24292F">(instruction);</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">continue</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>We start by handling our numeric values. To check if something is a number, we can use the <code>isNaN()</code> function. If it returns <code>false</code>, it must be a number. In that case, we can push the value onto the stack and move on to the next iteration.</p>
+<p>To keep things super simple, let's use a <code>switch</code> statement to handle all of our instructions:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">for</span><span style="color: #24292F"> (</span><span style="color: #CF222E">const</span><span style="color: #24292F"> </span><span style="color: #0550AE">instruction</span><span style="color: #24292F"> </span><span style="color: #CF222E">of</span><span style="color: #24292F"> instructions) {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">if</span><span style="color: #24292F"> (</span><span style="color: #CF222E">!</span><span style="color: #24292F"> </span><span style="color: #0550AE">isNaN</span><span style="color: #24292F">(instruction)) {</span></span>
+<span class="line"><span style="color: #24292F">        stack.</span><span style="color: #8250DF">push</span><span style="color: #24292F">(instruction);</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">continue</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">switch</span><span style="color: #24292F"> (instruction) {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">case</span><span style="color: #24292F"> </span><span style="color: #0550AE">ADD</span><span style="color: #24292F">:</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">let</span><span style="color: #24292F"> b </span><span style="color: #CF222E">=</span><span style="color: #24292F"> stack.</span><span style="color: #8250DF">pop</span><span style="color: #24292F">()</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">let</span><span style="color: #24292F"> a </span><span style="color: #CF222E">=</span><span style="color: #24292F"> stack.</span><span style="color: #8250DF">pop</span><span style="color: #24292F">()</span></span>
+<span class="line"><span style="color: #24292F">            stack.</span><span style="color: #8250DF">push</span><span style="color: #24292F">(a </span><span style="color: #CF222E">+</span><span style="color: #24292F"> b)</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">break</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">default</span><span style="color: #24292F">:</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">throw</span><span style="color: #24292F"> </span><span style="color: #CF222E">new</span><span style="color: #24292F"> </span><span style="color: #0550AE">Error</span><span style="color: #24292F">(</span><span style="color: #0A3069">`Unhandled instruction: ${</span><span style="color: #24292F">instruction</span><span style="color: #0A3069">}`</span><span style="color: #24292F">)</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>When we encounter an <code>ADD</code> instruction, we can pop the 2 operands from the stack. The first value that is popped will be the second (right-hand) operand to the equation.</p>
+<p>This can be quite confusing at first, but it's all down to the order that they were pushed in. The first value we pushed was <code>1</code>, the left-hand side of the equation. The second value was <code>2</code>, the right-hand side of the equation. When the first value is popped off of the stack, it'll be the number <code>2</code>.</p>
+<p>Once we have both <code>a</code> and <code>b</code>, we can add the 2 numbers together and push the value back on to the stack.</p>
+<p>To help with debugging, let's create a new <code>PRINT</code> instruction that will print <code>pop</code> the last value from the stack and run it through <code>console.log()</code>.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">const</span><span style="color: #24292F"> </span><span style="color: #0550AE">ADD</span><span style="color: #24292F"> </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;ADD&#39;</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #CF222E">const</span><span style="color: #24292F"> </span><span style="color: #0550AE">PRINT</span><span style="color: #24292F"> </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;PRINT&#39;</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">const</span><span style="color: #24292F"> </span><span style="color: #0550AE">instructions</span><span style="color: #24292F"> </span><span style="color: #CF222E">=</span><span style="color: #24292F"> [</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0550AE">1</span><span style="color: #24292F">, </span><span style="color: #0550AE">2</span><span style="color: #24292F">, </span><span style="color: #0550AE">ADD</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0550AE">PRINT</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">];</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">for</span><span style="color: #24292F"> (</span><span style="color: #CF222E">const</span><span style="color: #24292F"> </span><span style="color: #0550AE">instruction</span><span style="color: #24292F"> </span><span style="color: #CF222E">of</span><span style="color: #24292F"> instructions) {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">if</span><span style="color: #24292F"> (</span><span style="color: #CF222E">!</span><span style="color: #24292F"> </span><span style="color: #0550AE">isNaN</span><span style="color: #24292F">(instruction)) {</span></span>
+<span class="line"><span style="color: #24292F">        stack.</span><span style="color: #8250DF">push</span><span style="color: #24292F">(instruction);</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">continue</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">switch</span><span style="color: #24292F"> (instruction) {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">case</span><span style="color: #24292F"> </span><span style="color: #0550AE">ADD</span><span style="color: #24292F">:</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">let</span><span style="color: #24292F"> b </span><span style="color: #CF222E">=</span><span style="color: #24292F"> stack.</span><span style="color: #8250DF">pop</span><span style="color: #24292F">()</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">let</span><span style="color: #24292F"> a </span><span style="color: #CF222E">=</span><span style="color: #24292F"> stack.</span><span style="color: #8250DF">pop</span><span style="color: #24292F">()</span></span>
+<span class="line"><span style="color: #24292F">            stack.</span><span style="color: #8250DF">push</span><span style="color: #24292F">(a </span><span style="color: #CF222E">+</span><span style="color: #24292F"> b)</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">break</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">case</span><span style="color: #24292F"> </span><span style="color: #0550AE">PRINT</span><span style="color: #24292F">:</span></span>
+<span class="line"><span style="color: #24292F">            console.</span><span style="color: #8250DF">log</span><span style="color: #24292F">(stack.</span><span style="color: #8250DF">pop</span><span style="color: #24292F">())</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">break</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">default</span><span style="color: #24292F">:</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">throw</span><span style="color: #24292F"> </span><span style="color: #CF222E">new</span><span style="color: #24292F"> </span><span style="color: #0550AE">Error</span><span style="color: #24292F">(</span><span style="color: #0A3069">`Unhandled instruction: ${</span><span style="color: #24292F">instruction</span><span style="color: #0A3069">}`</span><span style="color: #24292F">)</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>If we run this program now, we can expect the number <code>3</code> to printed to the console.</p>
+<h2>Subtraction, Multiplication and Division</h2>
+<p>With the <code>ADD</code> and <code>PRINT</code> instructions in place, let's add the logic for <code>SUBTRACT</code>, <code>MULTIPLY</code> and <code>DIVIDE</code>.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">const</span><span style="color: #24292F"> </span><span style="color: #0550AE">ADD</span><span style="color: #24292F"> </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;ADD&#39;</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #CF222E">const</span><span style="color: #24292F"> </span><span style="color: #0550AE">SUBTRACT</span><span style="color: #24292F"> </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;SUBTRACT&#39;</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #CF222E">const</span><span style="color: #24292F"> </span><span style="color: #0550AE">MULTIPLY</span><span style="color: #24292F"> </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;MULTIPLY&#39;</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #CF222E">const</span><span style="color: #24292F"> </span><span style="color: #0550AE">DIVIDE</span><span style="color: #24292F"> </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;DIVIDE&#39;</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #CF222E">const</span><span style="color: #24292F"> </span><span style="color: #0550AE">PRINT</span><span style="color: #24292F"> </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;PRINT&#39;</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #6E7781">// ...</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">for</span><span style="color: #24292F"> (</span><span style="color: #CF222E">const</span><span style="color: #24292F"> </span><span style="color: #0550AE">instruction</span><span style="color: #24292F"> </span><span style="color: #CF222E">of</span><span style="color: #24292F"> instructions) {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">if</span><span style="color: #24292F"> (</span><span style="color: #CF222E">!</span><span style="color: #24292F"> </span><span style="color: #0550AE">isNaN</span><span style="color: #24292F">(instruction)) {</span></span>
+<span class="line"><span style="color: #24292F">        stack.</span><span style="color: #8250DF">push</span><span style="color: #24292F">(instruction);</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">continue</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">switch</span><span style="color: #24292F"> (instruction) {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">case</span><span style="color: #24292F"> </span><span style="color: #0550AE">ADD</span><span style="color: #24292F">:</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">let</span><span style="color: #24292F"> b </span><span style="color: #CF222E">=</span><span style="color: #24292F"> stack.</span><span style="color: #8250DF">pop</span><span style="color: #24292F">()</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">let</span><span style="color: #24292F"> a </span><span style="color: #CF222E">=</span><span style="color: #24292F"> stack.</span><span style="color: #8250DF">pop</span><span style="color: #24292F">()</span></span>
+<span class="line"><span style="color: #24292F">            stack.</span><span style="color: #8250DF">push</span><span style="color: #24292F">(a </span><span style="color: #CF222E">+</span><span style="color: #24292F"> b)</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">break</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">case</span><span style="color: #24292F"> </span><span style="color: #0550AE">SUBTRACT</span><span style="color: #24292F">:</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">let</span><span style="color: #24292F"> b </span><span style="color: #CF222E">=</span><span style="color: #24292F"> stack.</span><span style="color: #8250DF">pop</span><span style="color: #24292F">()</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">let</span><span style="color: #24292F"> a </span><span style="color: #CF222E">=</span><span style="color: #24292F"> stack.</span><span style="color: #8250DF">pop</span><span style="color: #24292F">()</span></span>
+<span class="line"><span style="color: #24292F">            stack.</span><span style="color: #8250DF">push</span><span style="color: #24292F">(a </span><span style="color: #CF222E">-</span><span style="color: #24292F"> b)</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">break</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">case</span><span style="color: #24292F"> </span><span style="color: #0550AE">MULTIPLY</span><span style="color: #24292F">:</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">let</span><span style="color: #24292F"> b </span><span style="color: #CF222E">=</span><span style="color: #24292F"> stack.</span><span style="color: #8250DF">pop</span><span style="color: #24292F">()</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">let</span><span style="color: #24292F"> a </span><span style="color: #CF222E">=</span><span style="color: #24292F"> stack.</span><span style="color: #8250DF">pop</span><span style="color: #24292F">()</span></span>
+<span class="line"><span style="color: #24292F">            stack.</span><span style="color: #8250DF">push</span><span style="color: #24292F">(a </span><span style="color: #CF222E">*</span><span style="color: #24292F"> b)</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">break</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">case</span><span style="color: #24292F"> </span><span style="color: #0550AE">DIVIDE</span><span style="color: #24292F">:</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">let</span><span style="color: #24292F"> b </span><span style="color: #CF222E">=</span><span style="color: #24292F"> stack.</span><span style="color: #8250DF">pop</span><span style="color: #24292F">()</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">let</span><span style="color: #24292F"> a </span><span style="color: #CF222E">=</span><span style="color: #24292F"> stack.</span><span style="color: #8250DF">pop</span><span style="color: #24292F">()</span></span>
+<span class="line"><span style="color: #24292F">            stack.</span><span style="color: #8250DF">push</span><span style="color: #24292F">(a </span><span style="color: #CF222E">/</span><span style="color: #24292F"> b)</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">break</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">case</span><span style="color: #24292F"> </span><span style="color: #0550AE">PRINT</span><span style="color: #24292F">:</span></span>
+<span class="line"><span style="color: #24292F">            console.</span><span style="color: #8250DF">log</span><span style="color: #24292F">(stack.</span><span style="color: #8250DF">pop</span><span style="color: #24292F">())</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">break</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">default</span><span style="color: #24292F">:</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">throw</span><span style="color: #24292F"> </span><span style="color: #CF222E">new</span><span style="color: #24292F"> </span><span style="color: #0550AE">Error</span><span style="color: #24292F">(</span><span style="color: #0A3069">`Unhandled instruction: ${</span><span style="color: #24292F">instruction</span><span style="color: #0A3069">}`</span><span style="color: #24292F">)</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>We now have a nice set of instructions to calculate some simple mathematical equations. Let's update our <code>instructions</code> array and calculate the value of <code>1 + 2 * 3</code>.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">const</span><span style="color: #24292F"> </span><span style="color: #0550AE">instructions</span><span style="color: #24292F"> </span><span style="color: #CF222E">=</span><span style="color: #24292F"> [</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0550AE">1</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0550AE">2</span><span style="color: #24292F">, </span><span style="color: #0550AE">3</span><span style="color: #24292F">, </span><span style="color: #0550AE">MULTIPLY</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0550AE">ADD</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0550AE">PRINT</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">]</span></span>
+<span class="line"></span></code></pre>
+<p>The order of these instructions might seem a little strange at first, but it's all to do with the precedence of each sub-calculation. If we were to insert some parentheses into the equation, it would really look like <code>1 + (2 * 3)</code> because the multiplication needs to be calculated separately.</p>
+<p>Putting that into words we're really calculating the result of <code>1</code> added to the result of <code>2 * 3</code>. Our instruction set is doing the same. We first push the value of <code>1</code> onto the stack. The value of <code>2 * 3</code> is then calculated and pushed back on to the stack.</p>
+<p>When the <code>ADD</code> instruction is reached we pop the result of <code>2 * 3</code> from the stack, as well as the value of <code>1</code> and add those together, pushing the result back on to the stack.</p>
+<p>With any luck, running this program will print <code>7</code> in the console.</p>
+<h3>A small problem</h3>
+<p>At the moment we can only print a value at the very end of the program. This is because the <code>PRINT</code> instruction will pop the last value off of the stack permanently, meaning any further instructions might not have a value to pop off.</p>
+<p>To fix this, we can update our <code>PRINT</code> case to instead retrieve the last value from the stack and print it.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">case</span><span style="color: #24292F"> </span><span style="color: #953800">PRINT</span><span style="color: #24292F">:</span></span>
+<span class="line"><span style="color: #24292F">    console.</span><span style="color: #8250DF">log</span><span style="color: #24292F">(stack[stack.</span><span style="color: #0550AE">length</span><span style="color: #24292F"> </span><span style="color: #CF222E">-</span><span style="color: #24292F"> </span><span style="color: #0550AE">1</span><span style="color: #24292F">])</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">break</span><span style="color: #24292F">;</span></span>
+<span class="line"></span></code></pre>
+<h2>Refactoring</h2>
+<p>There's lot of duplicated code in our instruction handling at the moment. All of our mathematical operations are popping 2 values from the stack and pushing back the result of the operation.</p>
+<p>To tidy this up, we could create some sort of instruction handler function for each of our instructions. Let's start by creating a <code>handler</code> object that maps the instruction to a callback function.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">const</span><span style="color: #24292F"> </span><span style="color: #0550AE">handler</span><span style="color: #24292F"> </span><span style="color: #CF222E">=</span><span style="color: #24292F"> {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #8250DF">ADD</span><span style="color: #24292F">: (</span><span style="color: #953800">a</span><span style="color: #24292F">, </span><span style="color: #953800">b</span><span style="color: #24292F">) </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> a </span><span style="color: #CF222E">+</span><span style="color: #24292F"> b,</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #8250DF">SUBTRACT</span><span style="color: #24292F">: (</span><span style="color: #953800">a</span><span style="color: #24292F">, </span><span style="color: #953800">b</span><span style="color: #24292F">) </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> a </span><span style="color: #CF222E">-</span><span style="color: #24292F"> b,</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #8250DF">MULTIPLY</span><span style="color: #24292F">: (</span><span style="color: #953800">a</span><span style="color: #24292F">, </span><span style="color: #953800">b</span><span style="color: #24292F">) </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> a </span><span style="color: #CF222E">-</span><span style="color: #24292F"> b,</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #8250DF">DIVIDE</span><span style="color: #24292F">: (</span><span style="color: #953800">a</span><span style="color: #24292F">, </span><span style="color: #953800">b</span><span style="color: #24292F">) </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> a </span><span style="color: #CF222E">/</span><span style="color: #24292F"> b,</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>When we encounter one of our mathematical instructions, we can create a common <code>case</code> block that pops the values and invokes one of these functions.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">for</span><span style="color: #24292F"> (</span><span style="color: #CF222E">const</span><span style="color: #24292F"> </span><span style="color: #0550AE">instruction</span><span style="color: #24292F"> </span><span style="color: #CF222E">of</span><span style="color: #24292F"> instructions) {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">if</span><span style="color: #24292F"> (</span><span style="color: #CF222E">!</span><span style="color: #24292F"> </span><span style="color: #0550AE">isNaN</span><span style="color: #24292F">(instruction)) {</span></span>
+<span class="line"><span style="color: #24292F">        stack.</span><span style="color: #8250DF">push</span><span style="color: #24292F">(instruction);</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">continue</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">switch</span><span style="color: #24292F"> (instruction) {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">case</span><span style="color: #24292F"> </span><span style="color: #0550AE">ADD</span><span style="color: #24292F">:</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">case</span><span style="color: #24292F"> </span><span style="color: #0550AE">SUBTRACT</span><span style="color: #24292F">:</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">case</span><span style="color: #24292F"> </span><span style="color: #0550AE">MULTIPLY</span><span style="color: #24292F">:</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">case</span><span style="color: #24292F"> </span><span style="color: #0550AE">DIVIDE</span><span style="color: #24292F">:</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">let</span><span style="color: #24292F"> b </span><span style="color: #CF222E">=</span><span style="color: #24292F"> stack.</span><span style="color: #8250DF">pop</span><span style="color: #24292F">()</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">let</span><span style="color: #24292F"> a </span><span style="color: #CF222E">=</span><span style="color: #24292F"> stack.</span><span style="color: #8250DF">pop</span><span style="color: #24292F">()</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">let</span><span style="color: #24292F"> result </span><span style="color: #CF222E">=</span><span style="color: #24292F"> handler[instruction](a, b)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">            stack.</span><span style="color: #8250DF">push</span><span style="color: #24292F">(result)</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">break</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">case</span><span style="color: #24292F"> </span><span style="color: #0550AE">PRINT</span><span style="color: #24292F">:</span></span>
+<span class="line"><span style="color: #24292F">            console.</span><span style="color: #8250DF">log</span><span style="color: #24292F">(stack[stack.</span><span style="color: #0550AE">length</span><span style="color: #24292F"> </span><span style="color: #CF222E">-</span><span style="color: #24292F"> </span><span style="color: #0550AE">1</span><span style="color: #24292F">])</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">break</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">default</span><span style="color: #24292F">:</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">throw</span><span style="color: #24292F"> </span><span style="color: #CF222E">new</span><span style="color: #24292F"> </span><span style="color: #0550AE">Error</span><span style="color: #24292F">(</span><span style="color: #0A3069">`Unhandled instruction: ${</span><span style="color: #24292F">instruction</span><span style="color: #0A3069">}`</span><span style="color: #24292F">)</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>This removes a lot of code duplication from our <code>switch</code> statement and gives us a single place to add new instruction handlers in the future.</p>
+<h2>Next steps</h2>
+<p>Now that you've created your own stack-based virtual machine, why not try to write a parser that converts a mathematical equation such as <code>1 + 2 / 3 * 4</code> into a set of instructions and runs them through your machine. Doing this will essentially give you a tiny calculator program that can grow further into a domain-specific language or general-purpose programming language.</p>
+
+    
+</body>
+</html>

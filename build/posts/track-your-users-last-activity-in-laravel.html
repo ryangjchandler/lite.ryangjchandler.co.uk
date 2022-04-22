@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>Track Your Users Last Activity in Laravel</h2>
+
+<p>Although there's many ways to do this in Laravel, the simplest way is with a piece of <code>web</code> middleware.</p>
+<h2>The setup</h2>
+<p>When an authenticated user visits a route in our application, we want to store the timestamp in the database for use later on. Let's store it in a column called <code>last_active_at</code>.</p>
+<p>All you need to do is create a migration:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">php artisan make:migration add_last_active_at_to_users_table --table=users</span></span>
+<span class="line"></span></code></pre>
+<p>And add the following line in the <code>up()</code> method:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">$table</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">timestamp</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;last_active_at&#39;</span><span style="color: #24292F">)</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">nullable</span><span style="color: #24292F">();</span></span>
+<span class="line"></span></code></pre>
+<p>If the user has never visited a route, it will remain <code>NULL</code> in the database.</p>
+<p>We also want to make sure this field is &quot;fillable&quot;, so add <code>last_active_at</code> to the <code>protected $fillable</code> array on your <code>User</code> model.</p>
+<p>As well as being able to update <code>last_active_at</code> using <code>User::update()</code>, we want to cast it to a <code>Carbon\Carbon</code> instance when using it so that we can make use of time comparison methods.</p>
+<h2>The middleware</h2>
+<h3>Logic</h3>
+<p>The middleware will be responsible for checking the authentication status and updating the <code>last_active_at</code> column.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">namespace</span><span style="color: #24292F"> </span><span style="color: #953800">App\Http\Middleware</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">Illuminate\Http\Request</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">Closure</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">class</span><span style="color: #24292F"> </span><span style="color: #953800">TrackLastActiveAt</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">handle</span><span style="color: #24292F">(</span><span style="color: #0550AE">Request</span><span style="color: #24292F"> $request, </span><span style="color: #0550AE">Closure</span><span style="color: #24292F"> $next)</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">if</span><span style="color: #24292F"> (</span><span style="color: #CF222E">!</span><span style="color: #24292F"> $request</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">user</span><span style="color: #24292F">()) {</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">return</span><span style="color: #24292F"> $next($request);</span></span>
+<span class="line"><span style="color: #24292F">        }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">if</span><span style="color: #24292F"> (</span><span style="color: #CF222E">!</span><span style="color: #24292F"> $request</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">user</span><span style="color: #24292F">()</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">last_active_at </span><span style="color: #CF222E">||</span><span style="color: #24292F"> $request</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">user</span><span style="color: #24292F">()</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">last_active_at</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">isPast</span><span style="color: #24292F">()) {</span></span>
+<span class="line"><span style="color: #24292F">            $request</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">user</span><span style="color: #24292F">()</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">update</span><span style="color: #24292F">([</span></span>
+<span class="line"><span style="color: #24292F">                </span><span style="color: #0A3069">&#39;last_active_at&#39;</span><span style="color: #24292F"> </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> </span><span style="color: #8250DF">now</span><span style="color: #24292F">(),</span></span>
+<span class="line"><span style="color: #24292F">            ]);</span></span>
+<span class="line"><span style="color: #24292F">        }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">return</span><span style="color: #24292F"> $next($request);</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>Here's what happens in order:</p>
+<ol>
+<li>We check the current user is authenticated. If they're not, we're returning early so that the rest of the middleware has no effect.</li>
+<li>If the current user <code>last_active_at</code> date &amp; time is <code>NULL</code> or is in the past, we want to update it using the current date and time. Thankfully, Laravel has a <code>now()</code> helper function that returns an instance of <code>Carbon\Carbon</code> for the current date and time.</li>
+<li>Forward the current request on to the next middleware.</li>
+</ol>
+<h3>Registration</h3>
+<p>We have a couple of different options for registering the middleware. If you want to track your users activity across <strong>all</strong> routes, it should be registered under the <code>web</code> array in <code>App\Http\Kernel</code>:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">protected</span><span style="color: #24292F"> $middlewareGroups </span><span style="color: #CF222E">=</span><span style="color: #24292F"> [</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0A3069">&#39;web&#39;</span><span style="color: #24292F"> </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> [</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #6E7781">// ...</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #0550AE">\App\Http\Middleware\TrackLastActiveAt</span><span style="color: #CF222E">::class</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">    ]</span></span>
+<span class="line"><span style="color: #24292F">]</span></span>
+<span class="line"></span></code></pre>
+<p>If you only want to track the latest activity for particular routes, you can register the middleware as part of your route registration:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #0550AE">Route</span><span style="color: #CF222E">::</span><span style="color: #8250DF">get</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;/foo&#39;</span><span style="color: #24292F">, </span><span style="color: #0A3069">&#39;FooController&#39;</span><span style="color: #24292F">)</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">middleware</span><span style="color: #24292F">([</span><span style="color: #0550AE">\App\Http\Middleware\TrackLastActiveAt</span><span style="color: #CF222E">::class</span><span style="color: #24292F">]);</span></span>
+<span class="line"></span></code></pre>
+
+    
+</body>
+</html>

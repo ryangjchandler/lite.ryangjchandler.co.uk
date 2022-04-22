@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>Unconventional Laravel: Synchronous jobs for reusability</h2>
+
+<p>Most applications use jobs as a way of pushing heavy logic off of the main thread and doing work asynchronously, in the background.</p>
+<p>After looking at some larger applications, I found a few that used synchronous jobs as a way of splitting up application logic into reusable components.</p>
+<h2>The idea</h2>
+<p>Laravel provides some convenient ways of dispatching jobs. If you had a job called <code>CreateSubscription</code> you could push it to the queue using <code>CreateSubscription::dispatch()</code>. You could also process it synchronously using <code>CreateSubscription::dispatchNow()</code>.</p>
+<p>A little known fact is that you can actually return things from the job itself.</p>
+<p>Let's create a barebones job:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">App\Models\User</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">Illuminate\Foundation\Bus\Dispatchable</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">Illuminate\Contracts\Queue\ShouldQueue</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">class</span><span style="color: #24292F"> </span><span style="color: #953800">CreateSubscription</span><span style="color: #24292F"> </span><span style="color: #CF222E">implements</span><span style="color: #24292F"> </span><span style="color: #0550AE">ShouldQueue</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">Dispatchable</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">    </span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">private</span><span style="color: #24292F"> $user;</span></span>
+<span class="line"><span style="color: #24292F">  </span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">private</span><span style="color: #24292F"> $plan;</span></span>
+<span class="line"><span style="color: #24292F">    </span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #0550AE">__construct</span><span style="color: #24292F">(</span><span style="color: #0550AE">User</span><span style="color: #24292F"> $user, </span><span style="color: #CF222E">string</span><span style="color: #24292F"> $plan)</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">user </span><span style="color: #CF222E">=</span><span style="color: #24292F"> $user;</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">plan </span><span style="color: #CF222E">=</span><span style="color: #24292F"> $plan;</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>The job will receive an instance of <code>App\Models\User</code> and store it in a <code>private</code> property. The visibility of this property isn't important since this job will be self handling.</p>
+<p>Here's the <code>handle</code> method:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">handle</span><span style="color: #24292F">()</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    $subscription </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0550AE">SomeSubscriptionService</span><span style="color: #CF222E">::</span><span style="color: #8250DF">create</span><span style="color: #24292F">([</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #0A3069">&#39;email&#39;</span><span style="color: #24292F"> </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">user</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">email,</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #0A3069">&#39;plan&#39;</span><span style="color: #24292F"> </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">plan,</span></span>
+<span class="line"><span style="color: #24292F">    ]);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">user</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">update</span><span style="color: #24292F">([</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #0A3069">&#39;subscription_id&#39;</span><span style="color: #24292F"> </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> $subscription</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">id,</span></span>
+<span class="line"><span style="color: #24292F">    ]);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">return</span><span style="color: #24292F"> $subscription;</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>The logic isn't important for this article. The important part is the <code>return $subscription</code> at the end of the method.</p>
+<p>If we were to dispatch this job inside of a controller:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">class</span><span style="color: #24292F"> </span><span style="color: #953800">SubscriptionController</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">store</span><span style="color: #24292F">(</span><span style="color: #0550AE">Request</span><span style="color: #24292F"> $request)</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        $subscription </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0550AE">CreateSubscription</span><span style="color: #CF222E">::</span><span style="color: #8250DF">dispatchNow</span><span style="color: #24292F">(</span></span>
+<span class="line"><span style="color: #24292F">            $request</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">user</span><span style="color: #24292F">(),</span></span>
+<span class="line"><span style="color: #24292F">            $request</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">input</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;plan&#39;</span><span style="color: #24292F">)</span></span>
+<span class="line"><span style="color: #24292F">        );</span></span>
+<span class="line"><span style="color: #24292F">        </span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #8250DF">redirect</span><span style="color: #24292F">()</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">route</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;subscription.thank-you&#39;</span><span style="color: #24292F">, [</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #0A3069">&#39;plan&#39;</span><span style="color: #24292F"> </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> $subscription</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">plan,</span></span>
+<span class="line"><span style="color: #24292F">        ]);</span></span>
+<span class="line"><span style="color: #24292F">    }    </span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>The return value of the job will be given back to the controller, in this case assigned to a variable so that it can be used further along.</p>
+<h2>Pros</h2>
+<h3>It's a job, queue it when you want</h3>
+<p>Since this is just a regular Laravel job that implements the <code>ShouldQueue</code> marker interface, you could just as easily push it to the queue using <code>CreateSubscription::dispatch()</code>.</p>
+<p>There's no need to change the logic at all, since the return value will just get thrown away, it won't harm the queue.</p>
+<p>With the example above where you <em>need</em> the subscription afterwards, it doesn't make much sense, but for something like <code>RenewSubscription</code>, you could use the job synchronously when the user manually renews in the browser, then use the same job from a scheduled command that handles automatic renewals or something.</p>
+<h3>Reusability</h3>
+<p>These jobs are reusable and can be used anywhere in your applications (controllers, listeners, commands, etc). This benefit is a little less important because in reality you could create any sort of class and have it do the same thing, just like the &quot;action&quot; pattern that is quite popular.</p>
+<h2>Cons</h2>
+<h3>It's different</h3>
+<p>Jobs aren't designed for this. They can do it, but according to convention they shouldn't. If a new developer comes on to a project and sees this, they're probably going to think &quot;What the f&amp;$*?&quot;.</p>
+<h3>It's not officially documented</h3>
+<p>This functionality won't be found anywhere in the <a href="https://laravel.com">official Laravel docs</a>, so it could disappear in a major version update. I doubt it will, but it <strong>could</strong>.</p>
+<h2>Sign off</h2>
+<p>If you've ever used this pattern, let me know on <a href="https://twitter.com/ryangjchandler">Twitter</a> because I'd love to know. Let me know if you have any questions or things you think I missed.</p>
+<p>I'd like to shout out <a href="https://laravel.io">laravel.io</a> too (<a href="https://twitter.com/driesvints">Dries</a>), since this is where I initially discovered this functionality. You can take a look at the <a href="https://github.com/laravelio/laravel.io">GitHub repo</a> to find out a bit more.</p>
+<p>As always, thanks for reading! 👋</p>
+
+    
+</body>
+</html>

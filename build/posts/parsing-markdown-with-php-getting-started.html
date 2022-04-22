@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>Parsing Markdown with PHP: Getting Started</h2>
+
+<p>I'm a huge fan of Markdown. I use it, literally, everywhere I can. The article that you're reading right now was written in Markdown. If I'm ever making notes, I'm using an application that supports Markdown.</p>
+<p>Personally, I find it to be the most consistent way of writing. Yes, there are lots of different flavours but they all have the same base.</p>
+<p>Here's an example of some Markdown:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #0550AE; font-weight: bold"># Let&#39;s get started with a heading.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">This is some </span><span style="color: #24292F; font-weight: bold">**bold**</span><span style="color: #24292F"> text.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">These are </span><span style="color: #24292F; font-style: italic">_italics_</span><span style="color: #24292F">.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">Here is a small bit of </span><span style="color: #24292F">`code`</span></span>
+<span class="line"></span></code></pre>
+<p>Markdown was inspired by text-to-HTML filters. They're tools designed to take some non-HTML text and transform them into good ol' hypertext.</p>
+<p>I won't go over the basics of Markdown in this series. The best place to read about that is on the <a href="https://daringfireball.net/projects/markdown/">author's website (John Gruber).</a></p>
+<p>This series will be using tools to transform Markdown that follows the <a href="https://commonmark.org/">CommonMark</a> specification into HTML.</p>
+<h2>Getting started</h2>
+<p>First thing that you need to do to start using Markdown in a PHP application is, you guessed it, install a Composer package.</p>
+<p>Since I'm going to be using the CommonMark specification, we need to use a tool that supports that spec.</p>
+<p>Luckily the wonderful people over at The PHP League have developed a package for that, <code>league/commonmark</code></p>
+<p>Run the following command to get it installed:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">composer require league/commonmark</span></span>
+<span class="line"></span></code></pre>
+<h2>Parsing your first Markdown</h2>
+<p>Now that the package is installed, you can start using it straight away.</p>
+<p>First, create a new instance of the <code>League\CommonMark\CommonMarkConverter</code> class.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">League\CommonMark\CommonMarkConverter</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">$converter </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #CF222E">new</span><span style="color: #24292F"> </span><span style="color: #0550AE">CommonMarkConverter</span><span style="color: #24292F">;</span></span>
+<span class="line"></span></code></pre>
+<p>Next, call the <code>convertToHtml()</code> method on the object and pass through a string of Markdown.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">League\CommonMark\CommonMarkConverter</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">$converter </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #CF222E">new</span><span style="color: #24292F"> </span><span style="color: #0550AE">CommonMarkConverter</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">$html </span><span style="color: #CF222E">=</span><span style="color: #24292F"> $converter</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">convertToHtml</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;# Hello World&#39;</span><span style="color: #24292F">);</span></span>
+<span class="line"></span></code></pre>
+<p>The <code>$html</code> variable will now hold the HTML equivalent of the Markdown provided, in this case it will be <code>&lt;h1&gt;Hello World&lt;/h1&gt;</code>.</p>
+<h2>Sanitising the Markdown</h2>
+<p>Since Markdown is converted to HTML, it makes sense that HTML can be written within the Markdown.</p>
+<p>When you're transforming user input, this can be risky and might open up the opportunity for an XSS attack.</p>
+<p>The PHP League have thought about this though and added an option to the converter that will help out.</p>
+<p>To begin using these configuration options, you need to provide an array when constructing the <code>League\CommonMark\CommonMarkConverter</code> object.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">League\CommonMark\CommonMarkConverter</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">$converter </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #CF222E">new</span><span style="color: #24292F"> </span><span style="color: #0550AE">CommonMarkConverter</span><span style="color: #24292F">([</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0A3069">&#39;html_input&#39;</span><span style="color: #24292F"> </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;escape&#39;</span></span>
+<span class="line"><span style="color: #24292F">]);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">$html </span><span style="color: #CF222E">=</span><span style="color: #24292F"> $converter</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">convertToHtml</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;# Hello World&#39;</span><span style="color: #24292F">);</span></span>
+<span class="line"></span></code></pre>
+<p>If you now change the Markdown being parsed and include some HTML, the result will be escaped.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">League\CommonMark\CommonMarkConverter</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">$converter </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #CF222E">new</span><span style="color: #24292F"> </span><span style="color: #0550AE">CommonMarkConverter</span><span style="color: #24292F">([</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0A3069">&#39;html_input&#39;</span><span style="color: #24292F"> </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;escape&#39;</span></span>
+<span class="line"><span style="color: #24292F">]);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">$html </span><span style="color: #CF222E">=</span><span style="color: #24292F"> $converter</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">convertToHtml</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;&lt;h1&gt;Hello World&lt;/h1&gt;&#39;</span><span style="color: #24292F">);</span></span>
+<span class="line"></span></code></pre>
+<p>After being transformed, <code>$html</code> will now hold the string <code>&amp;lt;h1&amp;gt;Hello World&amp;lt;/h1&amp;gt;</code> which is the escaped version of the HTML being transformed.</p>
+<blockquote>
+<p>If you're interested in some of the other options available, visit the package's documentation on <em><a href="https://commonmark.thephpleague.com/1.5/configuration/">Configuration</a></em>.</p>
+</blockquote>
+<h2>Sign off</h2>
+<p>Thanks for reading this article. In the next instalment, I'll be showing you some helpful extensions you can use to make your Markdown writing experience less painful.</p>
+<p>Thanks for reading! 👋</p>
+
+    
+</body>
+</html>

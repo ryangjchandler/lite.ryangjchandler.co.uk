@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>Storing Laravel Users on Disk in Flat-Files</h2>
+
+<p><strong>I'm tired of generic SQL databases.</strong> I've become infactuated with flat-file systems where content and data is stored on disk and persisted between environments, whether that be an SQLite database that powers my application or plain Markdown files.</p>
+<p>That is one of the main reasons why I built <a href="https://github.com/ryangjchandler/orbit">Orbit</a> - a flat-file &quot;database&quot; driver for Laravel's Eloquent ORM.</p>
+<p>The main idea is that all of your content and data is stored inside of a &quot;content&quot; file but can still be used through a normal Eloquent <code>Model</code>, just like it would with a MySQL or Postgres database.</p>
+<h2>The <code>User</code> model</h2>
+<p>To start using Orbit, you'll need to install the Composer package in your Laravel application.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">composer require ryangjchandler/orbit</span></span>
+<span class="line"></span></code></pre>
+<p>Orbit operates and bootstraps a model via the <code>Orbit\Concerns\Orbital</code> trait. This can be added to your <code>Model</code> class like this:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">Orbit\Concerns\Orbital</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">class</span><span style="color: #24292F"> </span><span style="color: #953800">User</span><span style="color: #24292F"> </span><span style="color: #CF222E">extends</span><span style="color: #24292F"> </span><span style="color: #0550AE">Model</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">Orbital</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>This is all you need to do for the model to be &quot;usable&quot;, but for it to function like a normal <code>User</code>, there are a couple of extra steps.</p>
+<h2>The <code>schema</code> method</h2>
+<p>Just like a model that's hooked up to a MySQL database, you should define a <code>schema</code>. This is what Orbit will use to determine what content is available in your flat-files and what should be accessible from the model.</p>
+<p>It's essentially an &quot;up&quot; migration, written as part of your model's definition:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">class</span><span style="color: #24292F"> </span><span style="color: #953800">User</span><span style="color: #24292F"> </span><span style="color: #CF222E">extends</span><span style="color: #24292F"> </span><span style="color: #0550AE">Model</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">Orbital</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">  </span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">static</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">schema</span><span style="color: #24292F">(</span><span style="color: #0550AE">Blueprint</span><span style="color: #24292F"> $table)</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>Laravel provides a <code>users</code> table migration as standard, so we can take that existing migration and copy it into the <code>schema</code> method:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">class</span><span style="color: #24292F"> </span><span style="color: #953800">User</span><span style="color: #24292F"> </span><span style="color: #CF222E">extends</span><span style="color: #24292F"> </span><span style="color: #0550AE">Model</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">Orbital</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">  </span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">static</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">schema</span><span style="color: #24292F">(</span><span style="color: #0550AE">Blueprint</span><span style="color: #24292F"> $table)</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        $table</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">id</span><span style="color: #24292F">();</span></span>
+<span class="line"><span style="color: #24292F">        $table</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">string</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;name&#39;</span><span style="color: #24292F">);</span></span>
+<span class="line"><span style="color: #24292F">        $table</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">string</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;email&#39;</span><span style="color: #24292F">)</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">unique</span><span style="color: #24292F">();</span></span>
+<span class="line"><span style="color: #24292F">        $table</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">timestamp</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;email_verified_at&#39;</span><span style="color: #24292F">)</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">nullable</span><span style="color: #24292F">();</span></span>
+<span class="line"><span style="color: #24292F">        $table</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">string</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;password&#39;</span><span style="color: #24292F">);</span></span>
+<span class="line"><span style="color: #24292F">        $table</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">rememberToken</span><span style="color: #24292F">();</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<blockquote>
+<p>Orbit will automatically add the <code>created_at</code> and <code>updated_at</code> columns to this schema if your <code>Model</code> class needs timestamps.</p>
+</blockquote>
+<p>And that's all there is to it. <strong>Really!</strong></p>
+<p>If you were to open up a <code>tinker</code> session and type <code>User::create([...])</code>, you would see a new <code>content/users</code> directory in your application, as well as a new <code>1.md</code> file.</p>
+<h2>Customising the primary key</h2>
+<p>One thing that I like to do with these flat-file models is use a more descriptive &quot;key&quot; as the primary key. In the case of the <code>User</code> model, that's most likely going to be the <code>email</code> since it's always going to be unique.</p>
+<p>To do this in Orbit, all you need to do is change the <code>$primaryKey</code> or overwrite the <code>getKeyName</code> method.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">class</span><span style="color: #24292F"> </span><span style="color: #953800">User</span><span style="color: #24292F"> </span><span style="color: #CF222E">extends</span><span style="color: #24292F"> </span><span style="color: #0550AE">Model</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">Orbital</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">  </span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">protected</span><span style="color: #24292F"> $primaryKey </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;email&#39;</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">  </span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">static</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">schema</span><span style="color: #24292F">(</span><span style="color: #0550AE">Blueprint</span><span style="color: #24292F"> $table)</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        $table</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">string</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;name&#39;</span><span style="color: #24292F">);</span></span>
+<span class="line"><span style="color: #24292F">        $table</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">string</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;email&#39;</span><span style="color: #24292F">)</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">unique</span><span style="color: #24292F">();</span></span>
+<span class="line"><span style="color: #24292F">        $table</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">timestamp</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;email_verified_at&#39;</span><span style="color: #24292F">)</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">nullable</span><span style="color: #24292F">();</span></span>
+<span class="line"><span style="color: #24292F">        $table</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">string</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;password&#39;</span><span style="color: #24292F">);</span></span>
+<span class="line"><span style="color: #24292F">        $table</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">rememberToken</span><span style="color: #24292F">();</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>Now, when you create a new <code>User</code>, the file name will be the same as the <code>email</code> making it really easy to see which users already exist.</p>
+<blockquote>
+<p>Changing the primary key of a model will affect the foreign and local columns for your relationships. For example, if you use <code>email</code> column as your <code>User</code> model's primary key, Laravel will guess that the foreign column name is <code>user_email</code> on the related model when using <code>belongsTo</code> relation. You can change this by specifying the column names when you define the relationship.</p>
+</blockquote>
+<h2>Sign off</h2>
+<p>If you're interested in Orbit and want to find out more, check out the <a href="https://github.com/ryangjchandler/orbit">GitHub repository</a>.</p>
+<p>Thanks for reading this post!</p>
+
+    
+</body>
+</html>

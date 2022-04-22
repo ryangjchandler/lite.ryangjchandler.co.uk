@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>Pseudo Computed Properties in Alpine</h2>
+
+<p>I've been trying to use <a href="https://github.com/alpinejs/alpine">Alpine.js</a> more and more throughout my projects, both personal and professional. At work, most of the JavaScript is still using good ol' jQuery (yeah, I know 🤦‍♂️) so it's been super nice to sprinkle some lightweight reactivity and interactive goodness in there too.</p>
+<p>Most of Vue's general API has been matched in Alpine. The directives, modifiers and general functionality is near enough identical. One thing that Alpine doesn't have out of the box is <a href="https://vuejs.org/v2/guide/computed.html">computed properties</a>. In reality a computed property is just a function that returns a value, as opposed to a property with a value assigned to it directly.</p>
+<p>My example for this article will be reversing a string. Let's take a look at the Vue implementation first, taken straight from the docs:</p>
+<h2>Vue</h2>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">div</span><span style="color: #24292F"> </span><span style="color: #0550AE">id</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;example&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">p</span><span style="color: #24292F">&gt;Original message: &quot;{{ message }}&quot;&lt;/</span><span style="color: #116329">p</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">p</span><span style="color: #24292F">&gt;Computed reversed message: &quot;{{ reversedMessage }}&quot;&lt;/</span><span style="color: #116329">p</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">&lt;/</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">var</span><span style="color: #24292F"> vm </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #CF222E">new</span><span style="color: #24292F"> </span><span style="color: #8250DF">Vue</span><span style="color: #24292F">({</span></span>
+<span class="line"><span style="color: #24292F">    el: </span><span style="color: #0A3069">&#39;#example&#39;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">    data: {</span></span>
+<span class="line"><span style="color: #24292F">        message: </span><span style="color: #0A3069">&#39;Hello&#39;</span></span>
+<span class="line"><span style="color: #24292F">    },</span></span>
+<span class="line"><span style="color: #24292F">    computed: {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #6E7781">// a computed getter</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #8250DF">reversedMessage</span><span style="color: #24292F">: </span><span style="color: #CF222E">function</span><span style="color: #24292F">() {</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #6E7781">// `this` points to the vm instance</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0550AE">this</span><span style="color: #24292F">.message.</span><span style="color: #8250DF">split</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;&#39;</span><span style="color: #24292F">).</span><span style="color: #8250DF">reverse</span><span style="color: #24292F">().</span><span style="color: #8250DF">join</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;&#39;</span><span style="color: #24292F">)</span></span>
+<span class="line"><span style="color: #24292F">        }</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">})</span></span>
+<span class="line"></span></code></pre>
+<p>When we take a look at the HTML in the browser, we get this:</p>
+<p><img src="https://raw.githubusercontent.com/ryangjchandler/ryangjchandler.co.uk/jigsaw/source/assets/images/vue-computed-properties.png" alt="Vue Computed Properties Example" /></p>
+<p>When we use <code>{{ reversedMessage }}</code> in our HTML / template, Vue will look for a property inside of the <code>computed</code> array with the same name and call the function to get the value.</p>
+<h2>Alpine</h2>
+<p>Let's try and recreate this with Alpine:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">div</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-data</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;data()&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">p</span><span style="color: #24292F">&gt;Original message: &quot;&lt;</span><span style="color: #116329">span</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-text</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;message&quot;</span><span style="color: #24292F">&gt;&lt;/</span><span style="color: #116329">span</span><span style="color: #24292F">&gt;&quot;&lt;/</span><span style="color: #116329">p</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">p</span><span style="color: #24292F">&gt;Computed reversed message: &quot;&lt;</span><span style="color: #116329">span</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-text</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;reversedMessage&quot;</span><span style="color: #24292F">&gt;&lt;/</span><span style="color: #116329">span</span><span style="color: #24292F">&gt;&quot;&lt;/</span><span style="color: #116329">p</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">&lt;/</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">data</span><span style="color: #24292F">() {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">return</span><span style="color: #24292F"> {</span></span>
+<span class="line"><span style="color: #24292F">        message: </span><span style="color: #0A3069">&#39;Hello&#39;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #8250DF">reversedMessage</span><span style="color: #24292F">: </span><span style="color: #CF222E">function</span><span style="color: #24292F"> () {</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0550AE">this</span><span style="color: #24292F">.message.</span><span style="color: #8250DF">split</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;&#39;</span><span style="color: #24292F">).</span><span style="color: #8250DF">reverse</span><span style="color: #24292F">().</span><span style="color: #8250DF">join</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;&#39;</span><span style="color: #24292F">)</span></span>
+<span class="line"><span style="color: #24292F">        }</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>This is what we get:</p>
+<p><img src="https://raw.githubusercontent.com/ryangjchandler/ryangjchandler.co.uk/jigsaw/source/assets/images/alpine-computed-properties-1.png" alt="Alpine Computed Properties Attempt" /></p>
+<p>The problem here is that Alpine doesn't know that our <code>reversedMessage</code> expression inside of <code>x-text</code> needs to be evaluated as a function. Instead, the function gets cast to a string by the browser.</p>
+<p>The way to fix this would be by changing <code>reversedMessage</code> to <code>reversedMessage()</code> and voila:</p>
+<p><img src="https://raw.githubusercontent.com/ryangjchandler/ryangjchandler.co.uk/jigsaw/source/assets/images/alpine-computed-properties-2.png" alt="Alpine Computed Properties Working" /></p>
+<p>Now it's calling the function and setting the return value as the text for our element. It's really that easy! I'm calling these &quot;pseudo computed properties&quot; since Alpine doesn't automatically determine whether or not the property is a function, but they are actually computed properties.</p>
+<p>These computed properties are reactive too. Changing the value of <code>message</code> using an <code>&lt;input&gt;</code> field or similar would update the computed value too.</p>
+<h2>Sign off</h2>
+<p>The example a above is a bit redundant and could actually be done as an inline expression with Alpine &amp; Vue. This might become more useful for certain types of data, such as the price of a product. You could use a computed property to prefix the output with a currency symbol (£, $, etc) and ensure that there is always 2 decimal points.</p>
+<p>If you like this little trick, please consider sharing on Twitter and keep an eye out for more posts on cool things you can do with Alpine.js!</p>
+<p>Have a good one :)</p>
+
+    
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>Get an Array of Unique Values in JavaScript</h2>
+
+<p>For anyone who has used PHP before, you're probably familiar with the <code>array_unique()</code> function. You would use it like this:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #0550AE">array_unique</span><span style="color: #24292F">([</span><span style="color: #0550AE">1</span><span style="color: #24292F">, </span><span style="color: #0550AE">2</span><span style="color: #24292F">, </span><span style="color: #0550AE">3</span><span style="color: #24292F">, </span><span style="color: #0550AE">4</span><span style="color: #24292F">, </span><span style="color: #0550AE">5</span><span style="color: #24292F">, </span><span style="color: #0550AE">5</span><span style="color: #24292F">, </span><span style="color: #0550AE">6</span><span style="color: #24292F">, </span><span style="color: #0550AE">7</span><span style="color: #24292F">, </span><span style="color: #0550AE">7</span><span style="color: #24292F">]); </span><span style="color: #6E7781">// returns [1, 2, 3, 4, 5, 6, 7]</span></span>
+<span class="line"></span></code></pre>
+<p>Unfortunately, JavaScript doesn't have a the core functionality to achieve the same result. Luckily for us, there is a couple of different ways to get there.</p>
+<p>These methods are going to assume that you are using primitive values (string, number, etc).</p>
+<h2>Distinct Filtering</h2>
+<p>This approach requires a method that filters the array down. We'll start by defining the <code>distinct()</code> method:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">distinct</span><span style="color: #24292F">(</span><span style="color: #953800">value</span><span style="color: #24292F">, </span><span style="color: #953800">index</span><span style="color: #24292F">, </span><span style="color: #953800">items</span><span style="color: #24292F">) {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">return</span><span style="color: #24292F"> items.</span><span style="color: #8250DF">indexOf</span><span style="color: #24292F">(value) </span><span style="color: #CF222E">===</span><span style="color: #24292F"> index;</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #6E7781">// or a single-liner</span></span>
+<span class="line"><span style="color: #CF222E">const</span><span style="color: #24292F"> </span><span style="color: #8250DF">distinct</span><span style="color: #24292F"> </span><span style="color: #CF222E">=</span><span style="color: #24292F"> (</span><span style="color: #953800">value</span><span style="color: #24292F">, </span><span style="color: #953800">index</span><span style="color: #24292F">, </span><span style="color: #953800">items</span><span style="color: #24292F">) </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> items.</span><span style="color: #8250DF">indexOf</span><span style="color: #24292F">(value) </span><span style="color: #CF222E">===</span><span style="color: #24292F"> index;</span></span>
+<span class="line"></span></code></pre>
+<p>All this function does it check to see if the <code>index</code> of our current <code>value</code> inside of the <code>items</code> array matches our current index. If it returns <strong>true</strong>, then we want to keep it in the array since it's the first occurrence. If it returns <strong>false</strong>, it means that the <code>value</code> has been found somewhere else in the array so it gets filtered out.</p>
+<p>Of course, this function doesn't do the removing so we need to pass it into <code>Array.filter()</code>:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">const</span><span style="color: #24292F"> </span><span style="color: #8250DF">distinct</span><span style="color: #24292F"> </span><span style="color: #CF222E">=</span><span style="color: #24292F"> (</span><span style="color: #953800">value</span><span style="color: #24292F">, </span><span style="color: #953800">index</span><span style="color: #24292F">, </span><span style="color: #953800">items</span><span style="color: #24292F">) </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> items.</span><span style="color: #8250DF">indexOf</span><span style="color: #24292F">(value) </span><span style="color: #CF222E">===</span><span style="color: #24292F"> index;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">let</span><span style="color: #24292F"> numbers </span><span style="color: #CF222E">=</span><span style="color: #24292F"> [</span><span style="color: #0550AE">1</span><span style="color: #24292F">, </span><span style="color: #0550AE">2</span><span style="color: #24292F">, </span><span style="color: #0550AE">3</span><span style="color: #24292F">, </span><span style="color: #0550AE">4</span><span style="color: #24292F">, </span><span style="color: #0550AE">5</span><span style="color: #24292F">, </span><span style="color: #0550AE">5</span><span style="color: #24292F">, </span><span style="color: #0550AE">6</span><span style="color: #24292F">, </span><span style="color: #0550AE">7</span><span style="color: #24292F">, </span><span style="color: #0550AE">7</span><span style="color: #24292F">];</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">let</span><span style="color: #24292F"> distinctNumbers </span><span style="color: #CF222E">=</span><span style="color: #24292F"> numbers.</span><span style="color: #8250DF">filter</span><span style="color: #24292F">(distinct); </span><span style="color: #6E7781">// returns [1, 2, 3, 4, 5, 6, 7]</span></span>
+<span class="line"></span></code></pre>
+<p>That wasn't hard now, was it?</p>
+<h2>Set objects</h2>
+<p>If you've not heard of <code>Set</code> objects before, they are essentially arrays that can store primitive values, as well as object references, but have enforced uniqueness. That means no two values can be the same inside of a <code>Set</code>, which helps us out a bunch.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">let</span><span style="color: #24292F"> distinctNumbers </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #CF222E">new</span><span style="color: #24292F"> </span><span style="color: #0550AE">Set</span><span style="color: #24292F">([</span><span style="color: #0550AE">1</span><span style="color: #24292F">, </span><span style="color: #0550AE">2</span><span style="color: #24292F">, </span><span style="color: #0550AE">3</span><span style="color: #24292F">, </span><span style="color: #0550AE">4</span><span style="color: #24292F">, </span><span style="color: #0550AE">5</span><span style="color: #24292F">, </span><span style="color: #0550AE">5</span><span style="color: #24292F">, </span><span style="color: #0550AE">6</span><span style="color: #24292F">, </span><span style="color: #0550AE">7</span><span style="color: #24292F">, </span><span style="color: #0550AE">7</span><span style="color: #24292F">])</span></span>
+<span class="line"></span></code></pre>
+<p>Our <code>numbers</code> variable now holds an instance of <code>Set</code> with <code>[1, 2, 3, 4, 5, 6, 7]</code>. For most of us, this wouldn't be a problem since <code>Set</code> has various methods such as <code>forEach()</code>, <code>values()</code> and <code>entries()</code> so we could do common operations on the <code>Set</code> directly, but what if we needed to use the <code>.indexOf()</code> method again? It won't work, correct!</p>
+<p>The next step is transforming our <code>Set</code> into an <code>Array</code>. In modern browsers, that can be done really easily using the spread (<code>...</code>) operator.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">let</span><span style="color: #24292F"> distinctNumbers </span><span style="color: #CF222E">=</span><span style="color: #24292F"> [</span><span style="color: #CF222E">...new</span><span style="color: #24292F"> </span><span style="color: #0550AE">Set</span><span style="color: #24292F">([</span><span style="color: #0550AE">1</span><span style="color: #24292F">, </span><span style="color: #0550AE">2</span><span style="color: #24292F">, </span><span style="color: #0550AE">3</span><span style="color: #24292F">, </span><span style="color: #0550AE">4</span><span style="color: #24292F">, </span><span style="color: #0550AE">5</span><span style="color: #24292F">, </span><span style="color: #0550AE">5</span><span style="color: #24292F">, </span><span style="color: #0550AE">6</span><span style="color: #24292F">, </span><span style="color: #0550AE">7</span><span style="color: #24292F">, </span><span style="color: #0550AE">7</span><span style="color: #24292F">])]</span></span>
+<span class="line"></span></code></pre>
+<p>That's all. We now have an array of unique values. If you wanted, you could package this into a nice little helper function called <code>arrayUnique</code>:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">const</span><span style="color: #24292F"> </span><span style="color: #8250DF">arrayUnique</span><span style="color: #24292F"> </span><span style="color: #CF222E">=</span><span style="color: #24292F"> (</span><span style="color: #953800">array</span><span style="color: #24292F">) </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> [</span><span style="color: #CF222E">...new</span><span style="color: #24292F"> </span><span style="color: #0550AE">Set</span><span style="color: #24292F">(array)]</span></span>
+<span class="line"></span></code></pre>
+<p>Copy and paste that into your <code>utils.js</code> file or wherever you store those sort of functions.</p>
+<h2>Sign off</h2>
+<p>Thanks for reading the article. Not much to read really, but it's a useful helper function to have until it gets implemented on the <code>Array</code> object.</p>
+
+    
+</body>
+</html>

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>Unconventional Laravel: Middleware-as-a-Service-Provider</h2>
+
+<p>Service providers are the backbone of Laravel's powerful <a href="https://laravel.com/docs/8.x/container">service container</a>. They can be used to bind new services to the container, call setup methods on third party libraries and interact with first-party / core services (generally through <a href="https://laravel.com/docs/8.x/facades">facades</a>).</p>
+<p>The problem with these classes is that they're global and generally registered and bootstrapped for <strong>every request</strong>. This means that if you want to do something based on the current request, your service provider needs to have some knowledge of the current request context.</p>
+<p>Take the following example:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">class</span><span style="color: #24292F"> </span><span style="color: #953800">AppServiceProvider</span><span style="color: #24292F"> </span><span style="color: #CF222E">extends</span><span style="color: #24292F"> </span><span style="color: #0550AE">ServiceProvider</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">boot</span><span style="color: #24292F">()</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">if</span><span style="color: #24292F"> (</span><span style="color: #CF222E">!</span><span style="color: #24292F"> </span><span style="color: #8250DF">request</span><span style="color: #24292F">()</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">is</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;admin/*&#39;</span><span style="color: #24292F">)) {</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #0550AE">User</span><span style="color: #CF222E">::</span><span style="color: #8250DF">addGlobalScope</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;forTenant&#39;</span><span style="color: #24292F">, </span><span style="color: #CF222E">new</span><span style="color: #24292F"> </span><span style="color: #0550AE">ForTenantScope</span><span style="color: #24292F">);</span></span>
+<span class="line"><span style="color: #24292F">        }</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>In this example a <a href="https://laravel.com/docs/8.x/eloquent#global-scopes">global scope</a> is being applied to the <code>User</code> model, but <strong>only</strong> for routes / URLs that don't match the pattern <code>admin/*</code>.</p>
+<p>On a small scale this is <em>probably</em> fine, but as your application grows and you find yourself adding more code inside of this <code>if</code> statement, things can get out of hand quickly and become a maintenance nightmare.</p>
+<h2>The middleware approach</h2>
+<p>Since this code is <strong>only</strong> going to be run for a specific group / set of routes, it can be moved to a piece of middleware and added to the stack for that group of routes.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">class</span><span style="color: #24292F"> </span><span style="color: #953800">BootstrapWebRoutes</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">handle</span><span style="color: #24292F">(</span><span style="color: #0550AE">Request</span><span style="color: #24292F"> $request, </span><span style="color: #0550AE">Closure</span><span style="color: #24292F"> $next)</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #0550AE">User</span><span style="color: #CF222E">::</span><span style="color: #8250DF">addGlobalScope</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;forTenant&#39;</span><span style="color: #24292F">, </span><span style="color: #CF222E">new</span><span style="color: #24292F"> </span><span style="color: #0550AE">ForTenantScope</span><span style="color: #24292F">);</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>This code is doing the same thing as before, but we can now add this middleware to the non <code>admin/*</code> routes and remove the request logic and knowledge from our service provider.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #0550AE">Route</span><span style="color: #CF222E">::</span><span style="color: #8250DF">as</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;web.&#39;</span><span style="color: #24292F">)</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">middleware</span><span style="color: #24292F">(</span><span style="color: #0550AE">BootstrapWebRoutes</span><span style="color: #CF222E">::class</span><span style="color: #24292F">)</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">group</span><span style="color: #24292F">(</span><span style="color: #CF222E">function</span><span style="color: #24292F"> () {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #0550AE">Route</span><span style="color: #CF222E">::</span><span style="color: #8250DF">get</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;users&#39;</span><span style="color: #24292F">, [</span><span style="color: #0550AE">UserController</span><span style="color: #CF222E">::class</span><span style="color: #24292F">, </span><span style="color: #0A3069">&#39;index&#39;</span><span style="color: #24292F">])</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">name</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;users.index&#39;</span><span style="color: #24292F">);</span></span>
+<span class="line"><span style="color: #24292F">    });</span></span>
+<span class="line"></span></code></pre>
+<p>Our global boot process now doesn't need to know about the current request context and we can guarantee that this scope is only going to be applied when visiting a route inside of this group (unless the middleware is applied elsewhere, obviously).</p>
+<h2>Pros</h2>
+<h3>Thinner service providers</h3>
+<p>The benefit with this approach is that our service providers will actually be slimmer and hopefully only contain things related to actual services.</p>
+<p>Of course, global scopes aren't the best example, but as you use more third-party libraries that have configuration values dependent on the current request context (menu builders, breadcrumbs, authorisation), you'll be thankful that it's all contained in middleware classes that are easier to find and compose.</p>
+<h3>Potentially faster bootups</h3>
+<p>On a small scale, framework bootstrapping times won't necessarily be faster since the logic that has been moved isn't heavy.</p>
+<p>If you were doing multiple bits of string manipulation, or lots of <code>preg_*</code> calls, then moving this out of the global application process <em>might</em> bring a performance improvement since it's only going to be done when it <strong>needs</strong> to be done.</p>
+<h3>Modularity</h3>
+<p>When building applications that use a modular structure, where each component of your application is grouped up into a smaller, Laravel-esque structure, this approach could definitely be of use.</p>
+<p>You won't need to step out of the module's context into a global service provider to run logic, or even worse, conditionally register a service provider. You can move all of that logic into a middleware class inside of the current module and register it for a group of routes as shown above.</p>
+<h2>Cons</h2>
+<h3>Abstract thinking</h3>
+<p>This concept isn't something that a lot of people will think to do when building there applications, because in a lot of cases libraries will directly tell you to add code inside of a <code>ServiceProvider</code> class. This is even the case with Laravel's own first-party packages.</p>
+<p>Due to this, future you might find it difficult to find logic or configuration without sifting through project-wide search results.</p>
+<h3>Late running</h3>
+<p>Route middleware is executed after global middleware and any service registration (inside <code>ServiceProvider::register()</code>) so using this approach might not work for <em>all</em> scenarios.</p>
+<p>Make sure that if you register any services from inside of this bootstrap middleware that it runs in the correct order, especially if another piece of middleware relies on one of those services.</p>
+<p>Also be careful when working with third-party libraries as they could be hooked into those early stages of the framework startup, meaning none of your code inside of the middleware has been evaluated at the right time.</p>
+<h2>Sign off</h2>
+<p>As always, be careful when adopting patterns like this (especially prematurely). On small projects with one or two developers, this pattern might not be a beneficial one to use since you're going to know where things are 99% of the time and it will probably cause more damage than good.</p>
+<p>I've seen this patterns used in a couple of different scenarios, mostly when working with <code>carbon/carbon</code> and different default formats are used depending on the context, or the base element for breadcrumbs is different based on the request URL.</p>
+<p>If you enjoyed this article, I'd love to know on <a href="https://twitter.com">Twitter</a>. If you've ever used this pattern, let me know too!</p>
+<p>Thanks for reading!</p>
+
+    
+</body>
+</html>

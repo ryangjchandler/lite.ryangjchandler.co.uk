@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>Learn Go by Building an Uptime Checker: Getting Started</h2>
+
+<p>In this series, I'm going to be building a simple uptime checker in <a href="https://golang.org/">Go</a>. The idea behind this project, as well as the series, is to teach you the basics of Go and how it compares to PHP and JavaScript.</p>
+<p>This instalment will go over how to install Go on your machine and write a generic &quot;Hello, World&quot; program.</p>
+<h2>Installing Go</h2>
+<p>Go's installation process is fairly simple. All you need to do is visit the Go documentation and follow the instructions on <a href="https://golang.org/doc/install">the &quot;Download and install&quot; page</a>.</p>
+<p>If you're using Homebrew on macOS (or even Linux), you might want to run the following command instead:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">brew install go</span></span>
+<span class="line"></span></code></pre>
+<h2>Creating a new project</h2>
+<p>I'll begin by creating a new folder and a new <code>main.go</code> file in the root.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">mkdir uptime-checker </span><span style="color: #CF222E">&amp;&amp;</span><span style="color: #24292F"> touch uptime-checker/main.go </span><span style="color: #CF222E">&amp;&amp;</span><span style="color: #24292F"> </span><span style="color: #0550AE">cd</span><span style="color: #24292F"> uptime-checker</span></span>
+<span class="line"></span></code></pre>
+<p>To check that Go is installed correctly, I'll run the following command in the <code>uptime-checker</code> directory:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">go run main.go</span></span>
+<span class="line"></span></code></pre>
+<p>This command tells Go to run the <code>main.go</code> file that I just created.</p>
+<p>If Go is installed correctly, the output should be something similar to this:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">package main:</span></span>
+<span class="line"><span style="color: #24292F">main.go:1:1: expected </span><span style="color: #0A3069">&#39;package&#39;</span><span style="color: #24292F">, found </span><span style="color: #0A3069">&#39;EOF&#39;</span></span>
+<span class="line"></span></code></pre>
+<h2>Hello, World</h2>
+<p>The error that I got when running <code>main.go</code> is actually useful. It's telling me what I need to do to successfully execute the <code>main.go</code> file.</p>
+<p>When you write some Go, you're writing one of two things:</p>
+<ol>
+<li>Application</li>
+<li>Library</li>
+</ol>
+<p>Go uses a <code>package</code> keyword to differentiate between the two types of project. The error above is letting me know that since I'm trying to <code>run</code> the <code>main.go</code> file, I need a <code>package</code> declaration at the top of the file.</p>
+<p>Like most compiled C-style languages, Go needs some sort of entry point. It determines this entry point / application root using both a <code>package</code> declaration and a <code>main</code> function.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">package</span><span style="color: #24292F"> </span><span style="color: #953800">main</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">func</span><span style="color: #24292F"> </span><span style="color: #8250DF">main</span><span style="color: #24292F">() {</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>By adding the <code>package main</code> statement at the beginning of the file, Go knows that this is indeed an application instead of a library and that it's the entry file for our application.</p>
+<p>The <code>main</code> function is what Go will look for and try to run when our application script is invoked.</p>
+<p>This is very different to PHP and JavaScript, both of which being procedural languages that can evaluate code from the very beginning of the file without any need for an entry point or starting line.</p>
+<p>If I run the script now using <code>go run main.go</code>, I won't get an error anymore and the output will instead be blank.</p>
+<h3>Printing to the console</h3>
+<p>Now that the my <code>main.go</code> file has the bare minimum code, I want to start writing to the user's terminal / console.</p>
+<p>Go comes with a <a href="https://pkg.go.dev/std">standard libary</a>. This is a collection of packages that is available in any Go program or library.</p>
+<p>To access these standard modules, I need to use the <code>import</code> keyword. This keyword is used to import external libraries / packages, as well as the standard library.</p>
+<p>This is very different when compared to PHP and browser-based JavaScript that have their standard libraries / functions available under the global namespace.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">package</span><span style="color: #24292F"> </span><span style="color: #953800">main</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">import</span><span style="color: #24292F"> </span><span style="color: #0A3069">&quot;</span><span style="color: #953800">fmt</span><span style="color: #0A3069">&quot;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">func</span><span style="color: #24292F"> </span><span style="color: #8250DF">main</span><span style="color: #24292F">() {</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>I've added the <code>import</code> statement above and decided to import the <code>fmt</code> package. This package is part of the standard library and comes with a wide range of formatting functions.</p>
+<p>Now that I've imported the <code>fmt</code> package, I can access any of it's exported functions using the <code>fmt</code> declaration.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">package</span><span style="color: #24292F"> </span><span style="color: #953800">main</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">import</span><span style="color: #24292F"> </span><span style="color: #0A3069">&quot;</span><span style="color: #953800">fmt</span><span style="color: #0A3069">&quot;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">func</span><span style="color: #24292F"> </span><span style="color: #8250DF">main</span><span style="color: #24292F">() {</span></span>
+<span class="line"><span style="color: #24292F">    fmt.</span><span style="color: #0550AE">Println</span><span style="color: #24292F">(</span><span style="color: #0A3069">&quot;Hello, World!&quot;</span><span style="color: #24292F">)</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>If I run this program now, I get the following output:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">ryan@main uptime-checker % go run main.go</span></span>
+<span class="line"><span style="color: #24292F">Hello, World</span></span>
+<span class="line"></span></code></pre>
+<p>And there you have it. The &quot;Hello, World&quot; program in Go.</p>
+<h2>Comparing to PHP and JavaScript</h2>
+<p>Let's take that Go program and compare it to the equivalent PHP and JavaScript code.</p>
+<p><strong>PHP</strong></p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">&lt;?</span><span style="color: #0550AE">php</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #0550AE">echo</span><span style="color: #24292F"> </span><span style="color: #0A3069">&quot;Hello, World&quot;</span></span>
+<span class="line"></span></code></pre>
+<p><strong>JavaScript</strong></p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">console.</span><span style="color: #8250DF">log</span><span style="color: #24292F">(</span><span style="color: #0A3069">&quot;Hello, World&quot;</span><span style="color: #24292F">)</span></span>
+<span class="line"></span></code></pre>
+<p>Both PHP and JavaScript require <em>a lot</em> less code to get a basic &quot;Hello, World&quot; program going. In general, this comes down to the nature of the language.</p>
+<p>As I mentioned before PHP and JavaScript has a standard library of functions and keywords in the global namespace, removing the need for imports.</p>
+<p>You also don't need to declare any entry points since they are both procedural languages that evaluate from top to bottom.</p>
+<h2>Exploring the syntax of Go</h2>
+<p>I haven't spoken too much about the syntax of Go yet so I'll go over some of the concepts seen in the <code>main.go</code> file so far.</p>
+<p><strong>Functions</strong></p>
+<p>Unlike PHP and JavaScript that generally use the <code>function</code> keyword for defining functions, Go uses the <code>func</code> keyword.</p>
+<p><strong>Semi-colons</strong></p>
+<p>Go <strong>does not</strong> require semi-colons at the end of all statements like PHP does. It's more similar to JavaScript in that they're optional <em>(most of the time)</em>.</p>
+<p><strong>Imports</strong></p>
+<p>Go uses the <code>import</code> keyword to pull in external libraries / packages. This is similar to JavaScript's <code>import</code> keyword, the biggest difference between the two being how the package is resolved and actually included in the current namespace.</p>
+<p>In JavaScript, you have to tell the engine what you want to call any imports.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">import</span><span style="color: #24292F"> Alpine </span><span style="color: #CF222E">from</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;alpinejs&#39;</span></span>
+<span class="line"></span></code></pre>
+<p>This will take the default export of the <code>alpinejs</code> package and declare it under a new <code>Alpine</code> variable.</p>
+<p>In Go-land the name of the package is used as the declaration and it becomes an object-like structure, holding all of the exported functions of the package.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">import</span><span style="color: #24292F"> </span><span style="color: #0A3069">&quot;</span><span style="color: #953800">fmt</span><span style="color: #0A3069">&quot;</span></span>
+<span class="line"></span></code></pre>
+<p>This would create a new <code>fmt</code> variable that you can use anywhere in the file. If you did need to rename the declaration, you can define the new identifier before the package string.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">import</span><span style="color: #24292F"> </span><span style="color: #0550AE">format</span><span style="color: #24292F"> </span><span style="color: #0A3069">&quot;</span><span style="color: #953800">fmt</span><span style="color: #0A3069">&quot;</span></span>
+<span class="line"></span></code></pre>
+<p>Now the <code>fmt</code> package will be accessible using the <code>format</code> identifier.</p>
+<p>You might have noticed that when calling an export function, the function's name starts with a capital letter.</p>
+<p>This is a standard in Go where any function with a capital letter will be automatically exported. Here's the basic idea:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">package</span><span style="color: #24292F"> </span><span style="color: #953800">fmt</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">func</span><span style="color: #24292F"> </span><span style="color: #8250DF">Println</span><span style="color: #24292F">() {</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">func</span><span style="color: #24292F"> </span><span style="color: #8250DF">print</span><span style="color: #24292F">() {</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>Since <code>Println</code> starts with a capital later, it's automatically exported as part of the <code>fmt</code> package. The <code>print</code> function wouldn't be because it doesn't start with a capital letter.</p>
+<h2>Sign off</h2>
+<p>In the next instalment, I'll show you how to start parsing command-line arguments and options so that we can read the URL to monitor.</p>
+<p>If you enjoyed this article or have any feedback, let me know via <a href="https://twitter.com/ryangjchandler">Twitter</a>.</p>
+
+    
+</body>
+</html>

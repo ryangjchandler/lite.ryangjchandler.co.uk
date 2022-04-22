@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>Unconventional Laravel: Auto-validating models</h2>
+
+<p>In most applications validation logic is placed in standardised places. You can do it inside of <code>FormRequest</code> objects or as part of your controller logic. You could even do it inside of your middleware if you really wanted to.</p>
+<p>Have you ever considered removing that logic from your main request / response flow and holding the model accountable instead? If not, let me show you how it can be done and some of the pros and cons.</p>
+<h2>How?</h2>
+<h3>Model events</h3>
+<p>Most Laravel developers have used model events at some point in their career. If you haven't, here is how they work.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">&lt;?</span><span style="color: #0550AE">php</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">namespace</span><span style="color: #24292F"> </span><span style="color: #953800">App\Models</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">Illuminate\Database\Eloquent\Model</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">Illuminate\Support\Str</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">class</span><span style="color: #24292F"> </span><span style="color: #953800">Post</span><span style="color: #24292F"> </span><span style="color: #CF222E">extends</span><span style="color: #24292F"> </span><span style="color: #0550AE">Model</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">static</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">boot</span><span style="color: #24292F">()</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">parent::</span><span style="color: #8250DF">boot</span><span style="color: #24292F">();</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">static::</span><span style="color: #8250DF">creating</span><span style="color: #24292F">(</span><span style="color: #CF222E">function</span><span style="color: #24292F"> (</span><span style="color: #0550AE">Post</span><span style="color: #24292F"> $post) {</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">if</span><span style="color: #24292F"> (</span><span style="color: #CF222E">!</span><span style="color: #24292F">$post</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">slug) {</span></span>
+<span class="line"><span style="color: #24292F">                $post</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">slug </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0550AE">Str</span><span style="color: #CF222E">::</span><span style="color: #8250DF">slug</span><span style="color: #24292F">($post</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">title);</span></span>
+<span class="line"><span style="color: #24292F">            }</span></span>
+<span class="line"><span style="color: #24292F">        });</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>When a new <code>Post</code> model is created using the <code>Post::create()</code> method, our closure will be run before it has actually been saved / persisted. <code>Model::creating()</code> is just one example. There are <code>::created()</code>, <code>::saving()</code>, <code>::saved()</code> and so many more. You can read more about them in the <a href="https://laravel.com/docs/7.x/eloquent#events">Laravel documentation</a>.</p>
+<p>Generally speaking, these events are used to ensure that some property is always present or auto-generated on the model. Ensuring something exists kind of sounds like validation, doesn't it?</p>
+<h3>Validating the model</h3>
+<p>Now that we know how model events work, we can utilise them and validate our models on creation. Take a look at the following code:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">&lt;?</span><span style="color: #0550AE">php</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">namespace</span><span style="color: #24292F"> </span><span style="color: #953800">App\Models</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">Illuminate\Database\Eloquent\Model</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">Illuminate\Support\Str</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">Illuminate\Support\Facades\Validator</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">class</span><span style="color: #24292F"> </span><span style="color: #953800">Post</span><span style="color: #24292F"> </span><span style="color: #CF222E">extends</span><span style="color: #24292F"> </span><span style="color: #0550AE">Model</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">static</span><span style="color: #24292F"> $rules </span><span style="color: #CF222E">=</span><span style="color: #24292F"> [</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #0A3069">&#39;title&#39;</span><span style="color: #24292F"> </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;required|string|max:255&#39;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #0A3069">&#39;slug&#39;</span><span style="color: #24292F"> </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;required|string&#39;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #0A3069">&#39;excerpt&#39;</span><span style="color: #24292F"> </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;nullable|string|max:160&#39;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #0A3069">&#39;published_at&#39;</span><span style="color: #24292F"> </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;nullable|date&#39;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">    ];</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">static</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">boot</span><span style="color: #24292F">()</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">parent::</span><span style="color: #8250DF">boot</span><span style="color: #24292F">();</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">static::</span><span style="color: #8250DF">creating</span><span style="color: #24292F">(</span><span style="color: #CF222E">function</span><span style="color: #24292F"> (</span><span style="color: #0550AE">Post</span><span style="color: #24292F"> $post) {</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #0550AE">Validator</span><span style="color: #CF222E">::</span><span style="color: #8250DF">validate</span><span style="color: #24292F">($post</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">toArray</span><span style="color: #24292F">(), </span><span style="color: #CF222E">static::</span><span style="color: #24292F">$rules);</span></span>
+<span class="line"><span style="color: #24292F">        });</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>The rules are defined on the model as a static property, since they're unlikely to change. In the event that they do change, you could always define a <code>getRulesArray()</code> method on the model, and use the following snippet instead.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">static::</span><span style="color: #8250DF">creating</span><span style="color: #24292F">(</span><span style="color: #CF222E">function</span><span style="color: #24292F"> (</span><span style="color: #0550AE">Post</span><span style="color: #24292F"> $post) {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0550AE">Validator</span><span style="color: #CF222E">::</span><span style="color: #8250DF">validate</span><span style="color: #24292F">($post</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">toArray</span><span style="color: #24292F">(), $post</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">getRulesArray</span><span style="color: #24292F">());</span></span>
+<span class="line"><span style="color: #24292F">});</span></span>
+<span class="line"></span></code></pre>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">getRulesArray</span><span style="color: #24292F">()</span><span style="color: #CF222E">:</span><span style="color: #24292F"> </span><span style="color: #CF222E">array</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">return</span><span style="color: #24292F"> [</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #0A3069">&#39;title&#39;</span><span style="color: #24292F"> </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;required|string|max:255&#39;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #0A3069">&#39;slug&#39;</span><span style="color: #24292F"> </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;required|string&#39;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #0A3069">&#39;excerpt&#39;</span><span style="color: #24292F"> </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;nullable|string|max:160&#39;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #0A3069">&#39;published_at&#39;</span><span style="color: #24292F"> </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;nullable|date&#39;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">    ];</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>The second approach would make more sense when you need to conditionally apply some logic based on a property on the model, but in most cases I'd find a <code>static</code> array to be fine. One example might be a <code>unique</code> rule that needs to ignore the current model when updating / saving.</p>
+<h2>Things to note</h2>
+<p><strong>Hidden properties</strong></p>
+<p>Unfortunately Laravel's validator doesn't work with objects, meaning the <code>Model::toArray()</code> method is needed. The problem here is you might not actually be able to validate all of the properties if you're using the <code>protected $hidden</code> property on the model.</p>
+<p>This would be the case for the default <code>User</code> model that Laravel provides and the <code>password</code> column. One way to work around this is by making those properties visible during validation:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">protected</span><span style="color: #24292F"> $hidden </span><span style="color: #CF222E">=</span><span style="color: #24292F"> [</span><span style="color: #0A3069">&#39;published_at&#39;</span><span style="color: #24292F">];</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">static::</span><span style="color: #8250DF">creating</span><span style="color: #24292F">(</span><span style="color: #CF222E">function</span><span style="color: #24292F"> (</span><span style="color: #0550AE">Post</span><span style="color: #24292F"> $post) {</span></span>
+<span class="line"><span style="color: #24292F">    $post</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">makeVisible</span><span style="color: #24292F">([</span><span style="color: #0A3069">&#39;published_at&#39;</span><span style="color: #24292F">]);</span></span>
+<span class="line"><span style="color: #24292F">  </span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0550AE">Validator</span><span style="color: #CF222E">::</span><span style="color: #8250DF">validate</span><span style="color: #24292F">($post</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">toArray</span><span style="color: #24292F">(), </span><span style="color: #CF222E">static::</span><span style="color: #24292F">$rules);</span></span>
+<span class="line"><span style="color: #24292F">});</span></span>
+<span class="line"></span></code></pre>
+<p>Now when the <code>$post-&gt;toArray()</code> call is made, the <code>published_at</code> column will be present and processed.</p>
+<h2>Pros</h2>
+<h3>Knowledge encapsulation</h3>
+<p>One common thing, especially in more domain-driven patterns, is ensuring that your HTTP layer knows as little as possible about your database. In Laravel, this means your model becomes a God class full of database knowledge, and your controllers simply call methods without knowing what columns are present and what data types they are.</p>
+<p>With this auto-validation pattern, that is easy enough to achieve. Your controller no longer needs to do any validation or worry about what data is being validated. Your model handles all of that and encapsulates it in a single place.</p>
+<h3>Re-usability</h3>
+<p>Even if you didn't want to do the whole auto-validation thing, you could still place your rules on the model and use those elsewhere. This is another point on top of my last one. As long as you know the name of the method (use some sort of interface if you want), your controller won't know anything about the rules present, just that it needs to do some sort of validation.</p>
+<p>A smaller point is that any changes to the rules will be applied everywhere. You won't need to go through all of your controllers / form requests and change them.</p>
+<h3>Forget about the boring stuff</h3>
+<p>Validation is boring. This approach will mean you only have to do is in one place, just create your models as regular elsewhere. Forget about the boring stuff and enjoy the magic.</p>
+<h2>Cons</h2>
+<h3>Redirect loops</h3>
+<p>Since the <code>Validator::validate()</code> method throws a <code>ValidationException</code> when validation fails, Laravel will try to catch that exception and redirect back to the previous location.</p>
+<p>If for whatever reason your previous location was the same as the route where validation is failing, you will probably get stuck an a redirect loop.</p>
+<p>Be sure to only use this auto-validation pattern on separate routes, i.e. <code>GET /posts</code> and <code>POST /posts</code> would be fine.</p>
+<h3>Side effects</h3>
+<p>As mentioned a second ago, Laravel will pick up on the <code>ValidationException</code> and try to redirect the user back with some errors. This means that something that happens in the database layer <em>could</em> have some effect on the HTTP layer of your application.</p>
+<p>This doesn't bother me much, but there will be some people who find this disgusting and some sort of anti-pattern. Remember though, this is an <strong>unconventional</strong> thing to do.</p>
+<h3>&quot;Bottom of the drawer&quot; logic</h3>
+<p>The final con that I'd like to mention is that this pattern will push all of your validation to the &quot;bottom of the drawer&quot;. By that I mean the validation itself is hidden when looking at your controllers and other parts of your application, so when something goes wrong or you need to add a new validation rule, it might cause some headaches or digging to find out where it is all taking place.</p>
+<h2>Sign off</h2>
+<p>Thanks for reading! I'm super excited to write some more articles about strange patterns you can use in your Laravel applications.</p>
+<p>If you're interested in using this automatic validation pattern in your applications, I've created a small package that will can make it a bit easier to get started with. Check it out on my <a href="https://github.com/ryangjchandler/laravel-auto-validate-models">GitHub</a> or click <a href="https://github.com/ryangjchandler/laravel-auto-validate-models">this link</a>.</p>
+
+    
+</body>
+</html>

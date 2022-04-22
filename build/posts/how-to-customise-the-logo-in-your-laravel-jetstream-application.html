@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>How to Customise the Logo in Your Laravel Jetstream Application</h2>
+
+<blockquote>
+<p>This article assumes you've already got a <a href="https://jetstream.laravel.com/">Laravel Jetstream</a> application setup. If you haven't, read the official documentation on <a href="https://jetstream.laravel.com/2.x/installation.html">how to get started</a>.</p>
+</blockquote>
+<h2>Publishing Jetstream's views</h2>
+<p>Although Jetstream publishes quite a few things into your application, it doesn't publish views by default. The main reason for this is it's much easier to rollout bug fixes or new features if the views are registered inside of the package.</p>
+<p>You can publish them yourself however by running the following command:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">php artisan vendor:publish --tag=jetstream-views</span></span>
+<span class="line"></span></code></pre>
+<p>This will publish all of Jetstream's views into <code>resources/views/vendor/jetstream</code>.</p>
+<h2>Changing the logo</h2>
+<p>The steps needed here depend on which stack you have chosen.</p>
+<h3>Livewire</h3>
+<p>To use a custom logo, you'll need to customise three files:</p>
+<ol>
+<li>
+<code>resources/views/vendor/jetstream/components/application-logo.blade.php</code>
+</li>
+<li>
+<code>resources/views/vendor/jetstream/components/application-mark.blade.php</code>
+</li>
+<li>
+<code>resources/views/vendor/jetstream/components/authentication-card-logo.blade.php</code>
+</li>
+</ol>
+<p>Each of these files will contain an SVG. Replace this markup with your own logo (another SVG or even an <code>&lt;img&gt;</code> tag).</p>
+<blockquote>
+<p>If you use an SVG, be sure to add the <code>{{ $attributes }}</code> on to the <code>&lt;svg&gt;</code> tag so that any attributes passed through to the component are still rendered.</p>
+</blockquote>
+<h3>Inertia</h3>
+<p>You'll need to customise three files for Inertia too:</p>
+<ol>
+<li>
+<code>resources/js/Jetstream/ApplicationLogo.vue</code>
+</li>
+<li>
+<code>resources/js/Jetstream/ApplicationMark.vue</code>
+</li>
+<li>
+<code>resources/js/Jetstream/AuthenticationCardLogo.vue</code>
+</li>
+</ol>
+<p>Much like the Livewire stack, just replace the SVG markup with your own SVG or an <code>&lt;img&gt;</code> tag.</p>
+
+    
+</body>
+</html>

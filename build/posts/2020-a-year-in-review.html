@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>2020: A year in review</h2>
+
+<p><strong>Damn</strong>. 2020. What a (good, bad) year.</p>
+<p>This is my first time writing one of these &quot;year in review&quot; blog posts but I'd like to make this an annual tradition. It gives me an opportunity to reflect on the positives from this year and also look into next year, 2021.</p>
+<h2>Prologue</h2>
+<p>Before I get started, I want to acknowledge the fact that there are lots of people who have had it rough this year. Nobody could have predicted this year to turn out the way it did.</p>
+<p>Some might have guessed that certain things would happen but definitely not to <em>this</em> extent.</p>
+<p>I also want to acknowledge that I am <em>very</em> lucky and fortunate to be in a good position mentally, financially and health wise.</p>
+<h2>Personal</h2>
+<p>I don't want to go too deep into my personal life. You're probably not interested in it.</p>
+<p>Not much has changed for me in the last year outside of the development world. I think the biggest milestone was <strong>saving for a deposit on a house</strong>.</p>
+<p>This was one positive thing to come from COVID. Being stuck at home had a side effect of spending less money on food, travel and holidays since my partner and I couldn't do any of that. This leftover money ended up in savings and in the last couple of months has added up and allowed us to start looking at properties with the hopes of buying and moving out in the New Year.</p>
+<h2>Work</h2>
+<h3>New job</h3>
+<p>I started a new job in January at an insurance company, <a href="https://surewise.com">Surewise</a>. I joined a small team of Laravel developers who all have a shared goal of making online insurance smarter and simpler for as many people as possible.</p>
+<p>The job is great and I've been able to innovate our technology stack over this last year. We've implemented many new tools and packages, here's a list of just a few:</p>
+<ul>
+<li>
+<a href="https://laravel-livewire.com">Livewire</a>
+</li>
+<li>
+<a href="https://github.com/alpinejs/alpine">Alpine.js</a>
+</li>
+<li>CI/CD</li>
+</ul>
+<h3>Freelancing</h3>
+<p>I'm very happy to say that this year was <strong>the</strong> year that I started (seriously) freelancing. This was the second positive thing to come from COVID, since I was at home I had some more time on my hands and I wanted to help others with their projects.</p>
+<p>All of the freelance work was done in the evenings after work or at the weekends, but that really didn't bother me. I was helping others (people and companies) with their projects and really trying to help out companies who were invested in the <a href="https://tallstack.dev/">TALL stack</a>.</p>
+<h2>Open-source</h2>
+<p>I've been interested in open-source work for a few years now but this last year, it has been a real focus of mine.</p>
+<h3>My introduction to big open-source (Alpine.js)</h3>
+<p>It all started at the beginning of the year with the new <a href="https://github.com/alpinejs/alpine">Alpine</a> (originally named Project X) project by <a href="https://twitter.com/calebporzio">Caleb Porzio</a>. I was using the project myself and was very active on the repository. I'd comment on issues, try to help people out. I was also opening PRs to the project, trying to fix things, introduce new features and improve the developer experience along the way.</p>
+<p>This was my first real taste of what it was like to contribute to an open-source project and Caleb made the whole experience <strong>beautiful</strong>.</p>
+<p>As a developer who had come from the world of Vue, I felt like Alpine was missing something. There were also a few other people who felt the same way. That &quot;thing&quot; was a way of sharing state between components, a.k.a global state management.</p>
+<p>After a few iterations and releases of an early (and ugly) prototype, <a href="https://github.com/ryangjchandler/spruce">Spruce</a> was born. Spruce was my solution to that &quot;missing something&quot;. It was designed to be minimalistic, just like Alpine. It felt natural to use through the <code>$store</code> variable that it provided.</p>
+<p>I personally believe that Spruce has filled that void and the numbers do add up. On average, the CDN has had over 75,000 hits per month so either somebody is using it on a really big site, or a lot of people are using it on smaller sites.</p>
+<p>Either way, it solved the problem for me. That's all that matters, right?</p>
+<p>As well as Spruce, I've gone on to create and contribute to other Alpine.js related projects such as the <a href="https://github.com/alpine-collective/alpinejs-devtools">DevTools</a>, <a href="https://github.com/alpine-collective/alpine-magic-helpers">Magic Helpers</a> and the <a href="https://github.com/alpine-collective/awesome">Awesome list</a>.</p>
+<h3>The TALL stack</h3>
+<p>Alongside Alpine, Caleb released a new tool called Livewire. Together they're extremely powerful and add Tailwind to the mix, you're going to be having a party.</p>
+<p>As people started to pick up these new tools an acronym emerged, TALL:</p>
+<ul>
+<li>
+<strong>T</strong>ailwind</li>
+<li>
+<strong>A</strong>lpine.js</li>
+<li>
+<strong>L</strong>ivewire</li>
+<li>
+<strong>L</strong>aravel</li>
+</ul>
+<p>The Laravel framework has had this concept of &quot;presets&quot; for a little while but there wasn't a real one for the TALL stack.</p>
+<p>So I teamed up with <a href="https://twitter.com/LiamHammett">Liam Hammett</a> and <a href="https://twitter.com/danjharrin">Dan Harrin</a> to build one. We wanted to build <strong><a href="https://github.com/laravel-frontend-presets/tall">the best third-party preset</a></strong> preset Laravel.</p>
+<p>We went above and beyond really. It came out of the box with tests, customisable components, pretty Tailwind components and more.</p>
+<p>At the time of writing this article, our preset has had over 33,000 downloads. That is an insane amount of downloads and we're all really happy with how it turned out, as well as how helpful it has been.</p>
+<h3>GitHub Sponsors</h3>
+<p>GitHub introduced a new Sponsors program this year. I was accepted into it and wrote a <a href="https://github.com/sponsors/ryangjchandler">small profile</a>.</p>
+<p>I was initially inspired by Caleb's success with <a href="https://calebporzio.com/sponsorware">sponsorware</a>, but I never really pushed that concept. Instead, I opted for the &quot;if you use my packages and benefit from them in some way, you can give me $1 or more per month to show that you support my work&quot;.</p>
+<p>At the time of writing this article, I have <strong>25 sponsors</strong> and I couldn't be more grateful. You know who you are.</p>
+<p>The support that these guys give me, financially, allows me to spend more time on my open-source work. It really does mean <strong>a lot</strong>.</p>
+<h3>Overview</h3>
+<p>Here are some real numbers for you:</p>
+<ul>
+<li>
+<strong>Total number of contributions: &gt; 2,000</strong>
+</li>
+<li>
+<strong>Total number of discussions answered: &gt; 25</strong>
+</li>
+<li>
+<strong>Total number of pull request by me: &gt; 150</strong>
+</li>
+<li>
+<strong>Total number of issues by me: &gt; 200</strong>
+</li>
+</ul>
+<p>Considering I do all of that on the side of my full-time <em>and</em> freelance work, those numbers aren't too shabby.</p>
+<h2>Writing and Speaking</h2>
+<p>I got really serious about blogging this year. I've written <strong>30 blog posts</strong> (not including this one) on topics that interest me but also help other people out.</p>
+<p>One of my posts even reached <a href="https://news.ycombinator.com/item?id=24647722">Hacker News</a> and the abuse wasn't too bad!</p>
+<p>I won't go into numbers, but here are 4 of my most popular posts from the last year:</p>
+<ul>
+<li>
+<a href="https://ryangjchandler.co.uk/articles/running-github-actions-for-certain-commit-messages">Running GitHub Actions for Certain Commit Messages</a>
+</li>
+<li>
+<a href="https://ryangjchandler.co.uk/articles/unconventional-laravel-custom-pipeline-classes">Unconventional Laravel: Custom Pipeline Classes</a>
+</li>
+<li>
+<a href="https://ryangjchandler.co.uk/articles/writing-reusable-alpine-components">Writing Reusable Alpine Components</a>
+</li>
+<li>
+<a href="https://ryangjchandler.co.uk/articles/unconventional-laravel-responable-classes">Unconventional Laravel: Responsable classes</a>
+</li>
+</ul>
+<p>I also did my first meetup talks this year. My favourite one of them all was the <a href="https://meetup.laravel.com/">Laravel Worldwide Meetup</a> where I demonstrated how to setup a simple CI/CD pipeline for your Laravel application with GitHub Actions.</p>
+<p>You can watch that talk <a href="https://www.youtube.com/watch?v=1kPu2eQjkGk">on YouTube</a>.</p>
+<h2>New friends</h2>
+<p>Through all of my new ventures this year, I've been able to meet some really great people. I want to thank you all for reaching out to me for help with something, helping me with something and most of all, being awesome.</p>
+<p>I want to thank <a href="https://twitter.com/LiamHammett">Liam</a>, <a href="https://twitter.com/danjharrin">Dan</a>, <a href="https://twitter.com/calebporzio">Caleb</a>, <a href="https://twitter.com/carre_sam">Sam</a>, <a href="https://twitter.com/samuelstancl">Samuel</a>, <a href="https://twitter.com/LarsKlopstra">Lars</a>, <a href="https://twitter.com/hugo__df">Hugo</a>, <a href="https://twitter.com/kevinbatdorf">Kevin</a>, <a href="https://twitter.com/simo_tod">Simone</a>, <a href="https://twitter.com/damcclean">Duncan</a>. This feels like I'm accepting a Grammy so I've definitely missed some people off that list but if we talk, you know who you are.</p>
+<p>You've all had a huge impact on my developer life this year and it wouldn't have been the same without you.</p>
+<p>(I'll stop with the soppy stuff now).</p>
+<h2>Epilogue</h2>
+<p>This year has been full of thrills. For some, it has been full of lows but I really want to believe that 2021 will be a better year for all of us, all across the globe.</p>
+<p>As I look forward into 2021, I want to set a few goals for myself:</p>
+<ol>
+<li>Write more blog posts and help people out.</li>
+<li>Speak at a conference.</li>
+<li>Release at least 3 new open-source packages.</li>
+<li>Finish and release <a href="https://actions-for-php.com">GitHub Actions for PHP Developers</a>.</li>
+<li>Livestream on a regular basis.</li>
+<li>Meet new friends.</li>
+<li>Somehow convince <a href="https://twitter.com/taylorotwell">Taylor</a> to follow me.</li>
+</ol>
+<p>There we go. We'll see how well that went next year.</p>
+
+    
+</body>
+</html>

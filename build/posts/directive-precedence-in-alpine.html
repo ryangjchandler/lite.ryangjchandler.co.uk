@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>Directive precedence in Alpine</h2>
+
+<p>Since Alpine doesn't have a virtual DOM and doesn't compile your templates, it evaluates a component's directives procedurally, in the order that they are defined.</p>
+<h2>Directive evaluation</h2>
+<p>When defining your directives on a component, the order <strong>does</strong> matter.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">div</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-data</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;{ text: &#39;Hello&#39; }&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">p</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-text</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;text&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-bind:style</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;color: red;&quot;</span><span style="color: #24292F">&gt;&lt;/</span><span style="color: #116329">p</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">&lt;/</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<p>In the example above, our text will be set <strong>before</strong> the <code>style</code> attribute is updated. This could cause problems since you will see a flash of black, or whatever the default <code>color</code> is, before the <code>x-bind:style</code> directive is evaluated.</p>
+<p>To counter this problem, you could swap the two directives around:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">div</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-data</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;{ text: &#39;Hello&#39; }&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">p</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-bind:style</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;color: red;&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-text</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;text&quot;</span><span style="color: #24292F">&gt;&lt;/</span><span style="color: #116329">p</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">&lt;/</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<p>Now the <code>x-bind:style</code> is reached first, then our <code>x-text</code> directive is evaluated.</p>
+<p>Another option would be adding <code>x-cloak</code> to the element, <strong>at the end</strong>.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">div</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-data</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;{ text: &#39;Hello&#39; }&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">p</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-text</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;text&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-bind:style</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;color: red;&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-cloak</span><span style="color: #24292F">&gt;&lt;/</span><span style="color: #116329">p</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">&lt;/</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<p>Now the <code>&lt;p&gt;</code> will be hidden (<a href="https://ryangjchandler.co.uk/articles/hiding-elements-until-alpine-is-ready-with-x-cloak">as long as you have the correct CSS</a>) until Alpine has completely initialised the element.</p>
+<p>If you're interested in the piece of code that handles all of the evaluation, you can find it <a href="https://github.com/alpinejs/alpine/blob/67493c138e9e9282dd85839f5c410791981a798f/src/component.js#L250">here in the GitHub repository</a>.</p>
+
+    
+</body>
+</html>

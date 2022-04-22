@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>The Magic Behind Reactivity - Effects</h2>
+
+<p>In the <a href="/posts/the-magic-behind-reactivity-proxies">previous instalment</a>, we created a <code>reactive</code> function that accepts an object and returns a new <code>Proxy</code> instance.</p>
+<p>If you're not sure what a <code>Proxy</code> is or how it works, definitely go back and read that post.</p>
+<p>In this post, I'll be creating an <code>effect</code> function that will allow us to react to changes on the <code>Proxy</code> and update the DOM.</p>
+<h2>What is an &quot;effect&quot;?</h2>
+<p>An effect is a side-effect of a data change. Generally speaking, it's a function that should be run when a particular piece of data changes.</p>
+<p>Here's a good example:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">p</span><span style="color: #24292F"> </span><span style="color: #0550AE">id</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;greeting&quot;</span><span style="color: #24292F">&gt;Hello, reader!&lt;/</span><span style="color: #116329">p</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<p>At the moment, this text is completely static. If we use an <code>effect</code> function, we can actually make this dynamic.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">const</span><span style="color: #24292F"> </span><span style="color: #0550AE">greeting</span><span style="color: #24292F"> </span><span style="color: #CF222E">=</span><span style="color: #24292F"> document.</span><span style="color: #8250DF">querySelector</span><span style="color: #24292F">(</span><span style="color: #0A3069">&quot;#greeting&quot;</span><span style="color: #24292F">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">const</span><span style="color: #24292F"> </span><span style="color: #0550AE">data</span><span style="color: #24292F"> </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #8250DF">reactive</span><span style="color: #24292F">({</span></span>
+<span class="line"><span style="color: #24292F">    greeting: </span><span style="color: #0A3069">&quot;Hello, reader!&quot;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">});</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #8250DF">effect</span><span style="color: #24292F">(() </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> {</span></span>
+<span class="line"><span style="color: #24292F">    greeting.innerText </span><span style="color: #CF222E">=</span><span style="color: #24292F"> data.greeting;</span></span>
+<span class="line"><span style="color: #24292F">});</span></span>
+<span class="line"></span></code></pre>
+<p>We haven't written the <code>effect</code> function yet, so let's start implementing it now.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">effect</span><span style="color: #24292F">(</span><span style="color: #953800">callback</span><span style="color: #24292F">) {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #8250DF">callback</span><span style="color: #24292F">();</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>This version of <code>effect</code> is the bare minimum. When we register an effect, we want to invoke / call it immediately to update the DOM.</p>
+<h2>Running effects when state changes</h2>
+<p>If you were to do something like <code>data.greeting = 'Hello, John!'</code>, nothing will happen. Our DOM node won't be updated, which isn't very helpful.</p>
+<p>What we can do is store all the <code>effect</code> callbacks in an array and call each one when our <code>Proxy</code> is updated.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">const</span><span style="color: #24292F"> </span><span style="color: #0550AE">effects</span><span style="color: #24292F"> </span><span style="color: #CF222E">=</span><span style="color: #24292F"> [];</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">effect</span><span style="color: #24292F">(</span><span style="color: #953800">callback</span><span style="color: #24292F">) {</span></span>
+<span class="line"><span style="color: #24292F">    effects.</span><span style="color: #8250DF">push</span><span style="color: #24292F">(callback);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #8250DF">callback</span><span style="color: #24292F">();</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>Inside of the <code>Proxy.set</code> handler, we can loop through the <code>effects</code> array and call each callback.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">reactive</span><span style="color: #24292F">(</span><span style="color: #953800">object</span><span style="color: #24292F">) {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #6E7781">// ...</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #CF222E">new</span><span style="color: #24292F"> </span><span style="color: #0550AE">Proxy</span><span style="color: #24292F">(object, {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #6E7781">// ...</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #8250DF">set</span><span style="color: #24292F">(</span><span style="color: #953800">target</span><span style="color: #24292F">, </span><span style="color: #953800">property</span><span style="color: #24292F">, </span><span style="color: #953800">value</span><span style="color: #24292F">) {</span></span>
+<span class="line"><span style="color: #24292F">            target[property] </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #8250DF">reactive</span><span style="color: #24292F">(value);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">            effects.</span><span style="color: #8250DF">forEach</span><span style="color: #24292F">((</span><span style="color: #953800">effect</span><span style="color: #24292F">) </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> {</span></span>
+<span class="line"><span style="color: #24292F">                </span><span style="color: #8250DF">effect</span><span style="color: #24292F">();</span></span>
+<span class="line"><span style="color: #24292F">            });</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0550AE">true</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">        },</span></span>
+<span class="line"><span style="color: #24292F">    });</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>If we were to now run <code>data.greeting = 'Hello, John!'</code>, the DOM node's <code>innerText</code> property will be updated with the value <code>Hello, John!</code>.</p>
+<h2>More efficient updates</h2>
+<p>The current system works quite well for small bits of reactivity, such as text changes or attribute changes.</p>
+<p>If we were to have 50 different effects though, things would get a little bit out of hand and performance would take quite a big hit. That's because each change we make to <code>data</code> will invoke every callbacks inside of <code>effects</code> and if you're doing anything intensive such as AJAX requests, big loops or heavy DOM updates, your page will slow to a snail's pace.</p>
+<p>To work around this issue, we can introduce <strong>dependency tracking</strong>. This is really just a fancy phrase for figuring out what data an <code>effect</code> callback is using.</p>
+<p>The major benefit of dependency tracking is the fact that we will be able to only invoke / call the functions that were using the data being changed.</p>
+<p>The first thing we need to do is update our <code>effect</code> callback slightly:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">const</span><span style="color: #24292F"> </span><span style="color: #0550AE">effects</span><span style="color: #24292F"> </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #CF222E">new</span><span style="color: #24292F"> </span><span style="color: #0550AE">Map</span><span style="color: #24292F">();</span></span>
+<span class="line"><span style="color: #CF222E">let</span><span style="color: #24292F"> currentEffect </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0550AE">null</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">effect</span><span style="color: #24292F">(</span><span style="color: #953800">callback</span><span style="color: #24292F">) {</span></span>
+<span class="line"><span style="color: #24292F">    currentEffect </span><span style="color: #CF222E">=</span><span style="color: #24292F"> callback;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #8250DF">callback</span><span style="color: #24292F">();</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    currentEffect </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0550AE">null</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>When we register a new <code>effect</code>, we will assign the callback to a <code>currentEffect</code> variable and remove the old <code>effects</code> array. This will allow us to reference the callback inside of our <code>Proxy.get</code> function later on.</p>
+<p>We'll also want to store the effects for a particular <code>Proxy</code> somewhere. The best way to do this is with a <code>Map</code> object.</p>
+<p>The <code>Map</code> object provides you with a key/value storage, similar to a normal object. The main difference is that you're not limited to string-based keys, you can actually store objects in the key.</p>
+<p>This means we can store the <code>target</code> from our Proxy in the key and then an object literal (<code>{}</code>) in the value.</p>
+<p>Here's an example:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">const</span><span style="color: #24292F"> </span><span style="color: #0550AE">map</span><span style="color: #24292F"> </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #CF222E">new</span><span style="color: #24292F"> </span><span style="color: #0550AE">Map</span><span style="color: #24292F">();</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">const</span><span style="color: #24292F"> </span><span style="color: #0550AE">data</span><span style="color: #24292F"> </span><span style="color: #CF222E">=</span><span style="color: #24292F"> {</span></span>
+<span class="line"><span style="color: #24292F">    user: </span><span style="color: #0A3069">&quot;Ryan&quot;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">};</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">map.</span><span style="color: #8250DF">set</span><span style="color: #24292F">(data, {</span></span>
+<span class="line"><span style="color: #24292F">    user: [() </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> {}],</span></span>
+<span class="line"><span style="color: #24292F">});</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">map.</span><span style="color: #8250DF">get</span><span style="color: #24292F">(data)[</span><span style="color: #0A3069">&quot;user&quot;</span><span style="color: #24292F">]; </span><span style="color: #6E7781">// This returns an array containing an anonymous function.</span></span>
+<span class="line"></span></code></pre>
+<p>Let's also make some changes to the <code>Proxy.get</code> method:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">let</span><span style="color: #24292F"> effects </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #CF222E">new</span><span style="color: #24292F"> </span><span style="color: #0550AE">Map</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">reactive</span><span style="color: #24292F">(</span><span style="color: #953800">object</span><span style="color: #24292F">) {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #6E7781">//...</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #CF222E">new</span><span style="color: #24292F"> </span><span style="color: #0550AE">Proxy</span><span style="color: #24292F">(object, {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #8250DF">get</span><span style="color: #24292F">(</span><span style="color: #953800">target</span><span style="color: #24292F">, </span><span style="color: #953800">property</span><span style="color: #24292F">) {</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">if</span><span style="color: #24292F"> (currentEffect </span><span style="color: #CF222E">===</span><span style="color: #24292F"> </span><span style="color: #0550AE">null</span><span style="color: #24292F">) {</span></span>
+<span class="line"><span style="color: #24292F">                </span><span style="color: #CF222E">return</span><span style="color: #24292F"> target[property];</span></span>
+<span class="line"><span style="color: #24292F">            }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">if</span><span style="color: #24292F"> (</span><span style="color: #CF222E">!</span><span style="color: #24292F"> effects.</span><span style="color: #8250DF">has</span><span style="color: #24292F">(target)) {</span></span>
+<span class="line"><span style="color: #24292F">                effects.</span><span style="color: #8250DF">set</span><span style="color: #24292F">(target, {});</span></span>
+<span class="line"><span style="color: #24292F">            }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">const</span><span style="color: #24292F"> </span><span style="color: #0550AE">targetEffects</span><span style="color: #24292F"> </span><span style="color: #CF222E">=</span><span style="color: #24292F"> effects.</span><span style="color: #8250DF">get</span><span style="color: #24292F">(target);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">if</span><span style="color: #24292F"> (</span><span style="color: #CF222E">!</span><span style="color: #24292F"> targetEffects[property]) {</span></span>
+<span class="line"><span style="color: #24292F">                targetEffects[property] </span><span style="color: #CF222E">=</span><span style="color: #24292F"> [];</span></span>
+<span class="line"><span style="color: #24292F">            }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">            targetEffects[property].</span><span style="color: #8250DF">push</span><span style="color: #24292F">(currentEffect)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">return</span><span style="color: #24292F"> target[property];</span></span>
+<span class="line"><span style="color: #24292F">        },</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #6E7781">// ...</span></span>
+<span class="line"><span style="color: #24292F">    });</span></span>
+<span class="line"></span></code></pre>
+<p>Here's a breakdown of what's happening now:</p>
+<ol>
+<li>Check if <code>currentEffect</code> is not null. If it's <code>null</code>, we want to just return the property without doing any tracking. It will only hold a value when <code>effect()</code> is doing something.</li>
+<li>Check whether our <code>Map</code> has any entries for the <code>target</code> object. If it doesn't, we need to insert an empty object into the <code>Map</code> using <code>Map.set()</code>.</li>
+<li>We can then pull that object back out using <code>Map.get(target)</code>.</li>
+<li>We need to check whether the current <code>property</code> being accessed on the <code>target</code> has an entry inside of the object returned into <code>targetEffects</code>. If it doesn't, we can simply write to the object using <code>[]</code> notation.</li>
+<li>Finally we can return the <code>target[property]</code> so that it still behaves like a normal object.</li>
+</ol>
+<p>All of this combined allows us to track which properties are being used inside of <code>currentEffect</code>. Cool, right?</p>
+<h3>Running effects on change</h3>
+<p>Now that we know which <code>effect</code> callbacks rely on certain pieces of data, i.e. <code>property</code>, we can run only the required callbacks inside of <code>Proxy.set</code>.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">let</span><span style="color: #24292F"> effects </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #CF222E">new</span><span style="color: #24292F"> </span><span style="color: #0550AE">Map</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">reactive</span><span style="color: #24292F">(</span><span style="color: #953800">object</span><span style="color: #24292F">) {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #6E7781">// ...</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #CF222E">new</span><span style="color: #24292F"> </span><span style="color: #0550AE">Proxy</span><span style="color: #24292F">(object, {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #6E7781">// ...</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #8250DF">set</span><span style="color: #24292F">(</span><span style="color: #953800">target</span><span style="color: #24292F">, </span><span style="color: #953800">property</span><span style="color: #24292F">, </span><span style="color: #953800">value</span><span style="color: #24292F">) {</span></span>
+<span class="line"><span style="color: #24292F">            target[property] </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #8250DF">reactive</span><span style="color: #24292F">(value);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">if</span><span style="color: #24292F"> (effects.</span><span style="color: #8250DF">has</span><span style="color: #24292F">(target)) {</span></span>
+<span class="line"><span style="color: #24292F">                </span><span style="color: #CF222E">const</span><span style="color: #24292F"> </span><span style="color: #0550AE">targetEffects</span><span style="color: #24292F"> </span><span style="color: #CF222E">=</span><span style="color: #24292F"> effects.</span><span style="color: #8250DF">get</span><span style="color: #24292F">(target)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">                targetEffects[property].</span><span style="color: #8250DF">forEach</span><span style="color: #24292F">(</span><span style="color: #953800">effect</span><span style="color: #24292F"> </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> {</span></span>
+<span class="line"><span style="color: #24292F">                    </span><span style="color: #8250DF">effect</span><span style="color: #24292F">()</span></span>
+<span class="line"><span style="color: #24292F">                })</span></span>
+<span class="line"><span style="color: #24292F">            }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0550AE">true</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">        },</span></span>
+<span class="line"><span style="color: #24292F">    });</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>Here's a breakdown of the logic:</p>
+<ol>
+<li>We need to check whether the current <code>target</code> has any <code>effects</code> register. If it doesn't, we don't want to do anything as it will error out.</li>
+<li>Then we want to pull all of the <code>targetEffects</code> for that <code>target</code>.</li>
+<li>Once we have those effects, we can get the array for the <code>property</code> being updated and loop over it, invoking / calling each item in the array.</li>
+</ol>
+<h2>Wrapping up</h2>
+<p>And that's it! We now have a reactive object and an <code>effect</code> function that is invoked each time a relevant property in our <code>data</code> is updated.</p>
+<p>In the next instalment, I'll show you how to create a reactive data object from an HTML attribute, similar to Alpine's <code>x-data</code>.</p>
+<p>Until then, thank you for reading and I'll catch you next time!</p>
+
+    
+</body>
+</html>

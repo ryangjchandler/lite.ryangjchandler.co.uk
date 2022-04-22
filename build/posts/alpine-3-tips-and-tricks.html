@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>Alpine 3.x Tips and Tricks</h2>
+
+<p>At the time of writing this article, Alpine Day has finished and <a href="https://github.com/alpinejs/alpine-next">Alpine 3.x</a> has only been out a few hours. Some of the cool things that came with the new release are:</p>
+<ul>
+<li>
+<a href="https://alpinejs.dev">An official website</a>!</li>
+<li>
+<a href="https://alpinejs.dev/magics/store">First-party global stores</a>.</li>
+<li>A new and improved <a href="https://alpinejs.dev/advanced/reactivity">reactivity engine</a>.</li>
+<li>Improved <a href="https://alpinejs.dev/advanced/csp">CSP (Content-Security Policy) support</a>.</li>
+<li>And much, much more...</li>
+</ul>
+<p>I've only had my hands on it for a few hours, just like everybody else, but I've already had a big dive through the source code and here are a couple of things I've found.</p>
+<h2>1. Automatic <code>init</code> function calls</h2>
+<p>The new documentation states that components powered by <code>Alpine.data</code> declarations that contain an <code>init</code> function will automatically have the <code>init</code> function called. This is great and saves you some time since you don't need to hook up the <code>x-init</code> directive.</p>
+<p>After reading through the source code, it turns out you can actually add an <code>init</code> function to any data object and Alpine will still call that function automatically.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">div</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-data</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;{</span></span>
+<span class="line"><span style="color: #0A3069">    init() {</span></span>
+<span class="line"><span style="color: #0A3069">        console.log(&#39;Here we go!&#39;)</span></span>
+<span class="line"><span style="color: #0A3069">    }</span></span>
+<span class="line"><span style="color: #0A3069">}&quot;</span><span style="color: #24292F">&gt;&lt;/</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<p>When this component is initialized, the <code>init</code> function will be called automatically and the <code>console.log</code> will appear in your DevTools.</p>
+<h2>2. Clean up after yourself with <code>destroy</code></h2>
+<p>Anybody familiar with PHP will likely know about the <code>__destruct</code> magic method. This method is called when an object is garbage collected, allowing you to clean up or free other resources manually.</p>
+<p>Alpine 3.x also introduces a similar pattern for components through the use of <code>destroy</code> method. This method will be called when the component is removed from the DOM,</p>
+<p>A good example might be a carousel or image gallery library that modifies the DOM outside of your component, or isn't handled directly by Alpine.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">div</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-data</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;{</span></span>
+<span class="line"><span style="color: #0A3069">    init() {</span></span>
+<span class="line"><span style="color: #0A3069">        carouselLibrary.create();</span></span>
+<span class="line"><span style="color: #0A3069">    },</span></span>
+<span class="line"><span style="color: #0A3069">    destroy() {</span></span>
+<span class="line"><span style="color: #0A3069">        carouselLibrary.delete();</span></span>
+<span class="line"><span style="color: #0A3069">    }</span></span>
+<span class="line"><span style="color: #0A3069">}&quot;</span><span style="color: #24292F">&gt;&lt;/</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<p>Alpine will call the <code>destroy</code> method, allowing you to clean up after yourself.</p>
+<p><strong>This feature hasn't been documented yet. Please use with caution.</strong></p>
+<h2>3. Interact with global stores from external JavaScript</h2>
+<p>This is something that Spruce supported to, so if you used that with Alpine 2.x you'll be familiar with this one.</p>
+<p>Creating a store with <code>Alpine.store</code> allows you to access global state in your components using a <code>$store</code> property. That same <code>Alpine.store</code> method can be used to retrieve a store in your external scripts.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">Alpine.</span><span style="color: #8250DF">store</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;counter&#39;</span><span style="color: #24292F">, {</span></span>
+<span class="line"><span style="color: #24292F">    count: </span><span style="color: #0550AE">0</span></span>
+<span class="line"><span style="color: #24292F">})</span></span>
+<span class="line"></span></code></pre>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #6E7781">// In a different file or area.</span></span>
+<span class="line"><span style="color: #24292F">Alpine.</span><span style="color: #8250DF">store</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;counter&#39;</span><span style="color: #24292F">).count </span><span style="color: #CF222E">+=</span><span style="color: #24292F"> </span><span style="color: #0550AE">1</span></span>
+<span class="line"></span></code></pre>
+<p>Calling <code>Alpine.store</code> with a single argument will return the <code>Proxy</code> instance for that particular store. Awesome, right?</p>
+<h2>4. Independent <code>x-init</code> directives</h2>
+<p>This one is mentioned <a href="https://alpinejs.dev/directives/init#standalone-x-init">in the documentation</a>, but you can declare <code>x-init</code> on it's own, inside or outside of an Alpine component.</p>
+<p>This was a question that got asked <em>so</em> much previously -- people were getting frustrated with adding <code>x-init</code> and nothing happening.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">div</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-data</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">p</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-init</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;console.log(&#39;I am ready!&#39;)&quot;</span><span style="color: #24292F">&gt;&lt;/</span><span style="color: #116329">p</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">&lt;/</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">img</span><span style="color: #24292F"> </span><span style="color: #0550AE">src</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;...&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-init</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;doSomeMagicHere()&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<p>This is great for elements that don't need any state and just need to call another method or third-party library on initialisation.</p>
+<h2>5. Unfurl / unwrap <code>Proxy</code> with <code>Alpine.raw</code></h2>
+<p>When debugging an issue in a component, 9 times out of 10 we turn to <code>console.log()</code>. This is fine in most cases. Other times, people get confused by the appearance of a <code>Proxy</code> in their console window.</p>
+<p>This is somewhat annoying since expanding the object will give you <code>[[Target]]</code> and <code>[[Handler]]</code> which can be confusing.</p>
+<p>To save you some confusion, you can use <code>Alpine.raw</code> inside of your <code>console.log()</code> calls. This method will unfurl / unwrap the <code>Proxy</code> instance created by Alpine and return the underlying value, i.e. the plain object, array, etc.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">div</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-data</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;{ user: { name: &#39;Ryan&#39; } }&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-init</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;console.log(user)&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #6E7781">&lt;!-- This produces a `Proxy` in the console --&gt;</span></span>
+<span class="line"><span style="color: #24292F">&lt;/</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">div</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-data</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;{ user: { name: &#39;Ryan&#39; } }&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-init</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;console.log(Alpine.raw(user))&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #6E7781">&lt;!-- This produces the &quot;real&quot; `user` object in the console --&gt;</span></span>
+<span class="line"><span style="color: #24292F">&lt;/</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<hr />
+<p>And that's it from me, at least for now. I'll be working hard over the next couple of weeks trying to find other tips and tricks. In the meantime you can find me on <a href="https://twitter.com/ryangjchandler">Twitter</a> and <a href="https://github.com/ryangjchandler">GitHub</a>.</p>
+
+    
+</body>
+</html>

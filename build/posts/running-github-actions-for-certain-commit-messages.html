@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>Running GitHub Actions for Certain Commit Messages</h2>
+
+<p>I'm going to be honest with you all for a second. I write a lot of <code>wip</code> commits. These commits are normally small changes that I want to push up to GitHub so that:</p>
+<ol>
+<li>I don't lose things if anything goes wrong and my backup hasn't picked it up.</li>
+<li>If I can't describe the change I have just made.</li>
+<li>If I'm demonstrating something to somebody on a pull-request.</li>
+</ol>
+<p>The problem is, my actions are setup to run on <code>push</code>, so every single <code>wip</code> commit gets run through the CI process, whether it be running tests, linting or formatting.</p>
+<p>After doing some research, I found a way of preventing these from running on every single commit.</p>
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    if: "! contains(github.event.head_commit.message, 'wip')"
+
+<p>Now, whenever I push a <code>wip</code> commit or any commit that contains the word <code>wip</code>, it will be marked as skipped inside of GitHub actions.</p>
+<p>You could also flip the logic and perhaps do something like:</p>
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    if: "contains(github.event.head_commit.message, '[build]')"
+
+<p>Any commit that contains <code>[build]</code> will now trigger these jobs, everything else will be skipped.</p>
+<p>You can thank me later! 😉</p>
+
+    
+</body>
+</html>

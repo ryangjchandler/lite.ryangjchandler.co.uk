@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>Laravel Seeders on Steroids</h2>
+
+<p>It's very common for Laravel developers to create &quot;seeder&quot; classes that run in their local environment. The normal use-case is to create some dummy data for local development using <code>Factory</code> classes or the <code>DB</code> facade.</p>
+<p>Here are some commands that you've probably run before:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">php artisan migrate --seed</span></span>
+<span class="line"></span></code></pre>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">php artisan migrate:fresh --seed</span></span>
+<span class="line"></span></code></pre>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">php artisan db:seed</span></span>
+<span class="line"></span></code></pre>
+<p>Recently I learned that seeders can be more than just <code>Factory</code> runners.</p>
+<p>Looking at the underlying <code>Seeder</code> class, you'll notice a couple of different properties:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">namespace</span><span style="color: #24292F"> </span><span style="color: #953800">Illuminate\Database</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">abstract</span><span style="color: #24292F"> </span><span style="color: #CF222E">class</span><span style="color: #24292F"> </span><span style="color: #953800">Seeder</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #6E7781">/**</span></span>
+<span class="line"><span style="color: #6E7781">     * The container instance.</span></span>
+<span class="line"><span style="color: #6E7781">     *</span></span>
+<span class="line"><span style="color: #6E7781">     * </span><span style="color: #CF222E">@var</span><span style="color: #6E7781"> </span><span style="color: #0550AE">\Illuminate\Container\Container</span></span>
+<span class="line"><span style="color: #6E7781">     */</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">protected</span><span style="color: #24292F"> $container;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #6E7781">/**</span></span>
+<span class="line"><span style="color: #6E7781">     * The console command instance.</span></span>
+<span class="line"><span style="color: #6E7781">     *</span></span>
+<span class="line"><span style="color: #6E7781">     * </span><span style="color: #CF222E">@var</span><span style="color: #6E7781"> </span><span style="color: #0550AE">\Illuminate\Console\Command</span></span>
+<span class="line"><span style="color: #6E7781">     */</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">protected</span><span style="color: #24292F"> $command;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #6E7781">// More stuff here...</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<h2><code>$container</code></h2>
+<p>The <code>$container</code> property can be found in lots of classes provided by Laravel. It's the main way to automatically resolve dependencies, register bindings, etc.</p>
+<blockquote>
+<p>If you want to read more about Laravel's container, visit the <a href="https://laravel.com/docs/container">official documentation</a>.</p>
+</blockquote>
+<p>When you run a <code>Seeder</code> class via one of the many <code>artisan</code> commands, the <code>$container</code> property will actually be used to call the <code>run()</code> method defined on the class.</p>
+<p>This means you can type-hint container-bound dependencies in your <code>run</code> method's signature to help with extra tasks.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">class</span><span style="color: #24292F"> </span><span style="color: #953800">ExternalDataSeeder</span><span style="color: #24292F"> </span><span style="color: #CF222E">extends</span><span style="color: #24292F"> </span><span style="color: #0550AE">Seeder</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">run</span><span style="color: #24292F">(</span><span style="color: #0550AE">ExternalServiceClient</span><span style="color: #24292F"> $service)</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        $rates </span><span style="color: #CF222E">=</span><span style="color: #24292F"> $service</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">getRates</span><span style="color: #24292F">();</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">foreach</span><span style="color: #24292F"> ($rates </span><span style="color: #CF222E">as</span><span style="color: #24292F"> $rate) {</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #6E7781">// Do something with the rates here...</span></span>
+<span class="line"><span style="color: #24292F">        }</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>The <code>ExternalServiceClient</code> could be any class or object that has been bound to the container inside of a <code>ServiceProvider</code> or provided by a third-party package.</p>
+<p>Dependency injection is a perfect way of removing the construction and resolution logic from the <em>body</em> of the <code>run</code> method.</p>
+<h2><code>$command</code></h2>
+<p>I think <code>$command</code> is my favourite of the two. As the DocBlock suggests, it's holds an instance of <code>Illuminate\Console\Command</code>.</p>
+<p>When you're running your seeders via <code>artisan</code>, this is likely going to be an instance of whichever command you're currently running.</p>
+<p>The hidden power here is that we now have full access to the terminal, so we can show custom messages and provide extra information.</p>
+<p>Let's take our <code>$container</code> example and provide some helpful output about what we're actually doing:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">class</span><span style="color: #24292F"> </span><span style="color: #953800">ExternalDataSeeder</span><span style="color: #24292F"> </span><span style="color: #CF222E">extends</span><span style="color: #24292F"> </span><span style="color: #0550AE">Seeder</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">run</span><span style="color: #24292F">(</span><span style="color: #0550AE">ExternalServiceClient</span><span style="color: #24292F"> $service)</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        $rates </span><span style="color: #CF222E">=</span><span style="color: #24292F"> $service</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">getRates</span><span style="color: #24292F">();</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">foreach</span><span style="color: #24292F"> ($rates </span><span style="color: #CF222E">as</span><span style="color: #24292F"> $rate) {</span></span>
+<span class="line"><span style="color: #24292F">            $rate </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0550AE">Rate</span><span style="color: #CF222E">::</span><span style="color: #8250DF">create</span><span style="color: #24292F">([</span></span>
+<span class="line"><span style="color: #24292F">                </span><span style="color: #0A3069">&#39;name&#39;</span><span style="color: #24292F"> </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> $rate[</span><span style="color: #0A3069">&#39;name&#39;</span><span style="color: #24292F">],</span></span>
+<span class="line"><span style="color: #24292F">                </span><span style="color: #0A3069">&#39;multiplier&#39;</span><span style="color: #24292F"> </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> $rate[</span><span style="color: #0A3069">&#39;multiplier&#39;</span><span style="color: #24292F">],</span></span>
+<span class="line"><span style="color: #24292F">            ]);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">command</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">info</span><span style="color: #24292F">(</span><span style="color: #0A3069">&quot;Created a new rate with name {</span><span style="color: #24292F">$rate</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">name</span><span style="color: #0A3069">} and multiplier {</span><span style="color: #24292F">$rate</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">multiplier</span><span style="color: #0A3069">}.&quot;</span><span style="color: #24292F">);</span></span>
+<span class="line"><span style="color: #24292F">        }</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p><code>$this-&gt;command-&gt;info()</code> will print some text in a happy green colour to the console, providing the user with information about what the seeder is actually doing.</p>
+<p>We can take this one step further and use <code>$this-&gt;command-&gt;ask()</code> to retreive some input from the user. Let's write a <code>MakeUserSeeder</code> class that creates a new <code>User</code>.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">App\Models\User</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">Illuminate\Support\Facades\Hash</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">class</span><span style="color: #24292F"> </span><span style="color: #953800">MakeUserSeeder</span><span style="color: #24292F"> </span><span style="color: #CF222E">extends</span><span style="color: #24292F"> </span><span style="color: #0550AE">Seeder</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">run</span><span style="color: #24292F">()</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        $name </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">command</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">ask</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;Name&#39;</span><span style="color: #24292F">);</span></span>
+<span class="line"><span style="color: #24292F">        $email </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">command</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">ask</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;Email&#39;</span><span style="color: #24292F">);</span></span>
+<span class="line"><span style="color: #24292F">        $password </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">command</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">secret</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;Password&#39;</span><span style="color: #24292F">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #0550AE">User</span><span style="color: #CF222E">::</span><span style="color: #8250DF">create</span><span style="color: #24292F">([</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #0A3069">&#39;name&#39;</span><span style="color: #24292F"> </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> $name,</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #0A3069">&#39;email&#39;</span><span style="color: #24292F"> </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> $email,</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #0A3069">&#39;password&#39;</span><span style="color: #24292F"> </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> </span><span style="color: #0550AE">Hash</span><span style="color: #CF222E">::</span><span style="color: #8250DF">make</span><span style="color: #24292F">($password),</span></span>
+<span class="line"><span style="color: #24292F">        ]);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">command</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">info</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;User created successfully.&#39;</span><span style="color: #24292F">);</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>Running this seeder will ask the user to provide a name, email and password. It will then create that <code>User</code> in the database so that you can quickly login without needing to run a separate command or fill in a registration form.</p>
+<p>Let's do one more thing. Let's replace our custom <code>MakeUserSeeder</code> with my package <code>ryangjchandler/laravel-make-user</code>.</p>
+<p>We can begin by installing the package:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">composer require ryangjchandler/laravel-make-user</span></span>
+<span class="line"></span></code></pre>
+<p>This package provides a convenient <code>make:user</code> command that will ask similar questions to <code>MakeUserSeeder</code>. You can also extend the command to ask for extra data, more specific to your application.</p>
+<p>Inside of our <code>MakeUserSeeder</code>, we can replace the custom logic with a single <code>$this-&gt;command-&gt;call()</code> statement:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">class</span><span style="color: #24292F"> </span><span style="color: #953800">MakeUserSeeder</span><span style="color: #24292F"> </span><span style="color: #CF222E">extends</span><span style="color: #24292F"> </span><span style="color: #0550AE">Seeder</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">run</span><span style="color: #24292F">()</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">command</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">call</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;make:user&#39;</span><span style="color: #24292F">);</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>This will invoke the <code>make:user</code> command inside of the current process, allowing the <code>make:user</code> command to write to the same &quot;output&quot; as the seeder. That means any <code>$this-&gt;info()</code> or <code>$this-&gt;ask()</code> calls made by the <code>make:user</code> command will appear in the terminal, just like they did in the original <code>MakeUserSeeder</code>.</p>
+<p>All in all, I think this is pretty cool. With these 2 things, we can give our seeder classes superpowers and greatly reduce the number of commands or setup steps needed to get a local copy of the application running.</p>
+
+    
+</body>
+</html>

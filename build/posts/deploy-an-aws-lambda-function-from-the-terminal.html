@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>Deploy an AWS Lambda Function from the Terminal</h2>
+
+<p>My last article gave a quick run-down on <a href="https://ryangjchandler.co.uk/articles/execute-an-aws-lambda-function-from-the-terminal">how you can invoke a Lambda function from your terminal</a>. I've had a few people message me asking how I deploy / upload my Lambda functions to AWS.</p>
+<p>Here is how I do it.</p>
+<h2>Zipping up your code</h2>
+<p>When you upload your Lambda function, you'll want to provide a ZIP file that contains all of the necessary code. I mostly write Node functions these days, so my ZIP files generally contain a <code>node_modules</code> folder, an <code>index.js</code> file and a <code>package.json</code> file too so I can quickly check what dependencies I'm using from the Lambda UI.</p>
+<p>On UNIX machines, you can use the <code>zip</code> command to generate a ZIP file. As an example, you might run something like this:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">zip -r function.zip </span><span style="color: #0550AE">.</span></span>
+<span class="line"></span></code></pre>
+<p>This command will create a new <code>function.zip</code> file, compressing the contents of the current directory (or <code>.</code>).</p>
+<p>If you need to exclude some files, you can use the <code>-x</code> option. This is handy if you have a generic <code>input.json</code> or <code>output.json</code> file, as described in my <a href="https://ryangjchandler.co.uk/articles/execute-an-aws-lambda-function-from-the-terminal">other article</a>.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">zip -r function.zip </span><span style="color: #0550AE">.</span><span style="color: #24292F"> -x output.json input.json</span></span>
+<span class="line"></span></code></pre>
+<h2>Deploying to AWS</h2>
+<p>Now that we've got a ZIP file with our Lambda function's dependencies and handler, we can finally deploy to AWS. AWS have, surprisingly, made this very simple using the <a href="https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html">AWS CLI</a>.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">aws lambda update-function-code --function-name NameOfFunctionHere</span></span>
+<span class="line"></span></code></pre>
+<p>We haven't told the AWS CLI what to deploy though. In our case it will be a ZIP file, so let's use the <code>--zip-file</code> option and specify the correct file.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">aws lambda update-function-code --function-name NameOfFunctionHere --zip-file fileb://function.zip</span></span>
+<span class="line"></span></code></pre>
+<p>The <code>fileb://</code> protocol is used because we're uploading binary data.</p>
+<h2>Condensing this down</h2>
+<p>You might have already guessed it, but I don't actually type out this entire command each time. I like putting these commands inside of NPM &quot;scripts&quot; so that I can quickly run them with <code>npm run</code> or <code>yarn</code>.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0550AE">&quot;scripts&quot;</span><span style="color: #24292F">: {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #0550AE">&quot;zip&quot;</span><span style="color: #24292F">: </span><span style="color: #0A3069">&quot;zip -r function.zip . -x output.json input.json&quot;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #0550AE">&quot;deploy&quot;</span><span style="color: #24292F">: </span><span style="color: #0A3069">&quot;npm run zip &amp;&amp; aws lambda update-function-code --function-name NameOfFunctionHere --zip-file fileb://function.zip&quot;</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+
+    
+</body>
+</html>

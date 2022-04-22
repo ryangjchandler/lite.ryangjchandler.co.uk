@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>Setup MailHog with Laravel Valet</h2>
+
+<p>Before we begin, you need to have <strong><a href="https://brew.sh/">Homebrew</a></strong> installed. If you don't, visit <a href="https://brew.sh/">https://brew.sh/</a> for instructions on how to get it installed.</p>
+<p>If you're <em>not</em> using Laravel Valet, you can skip the last section of this tutorial and use the <code>localhost</code> / <code>127.0.0.1</code> domain instead.</p>
+<h2>Installing MailHog</h2>
+<p>To install MailHog, run the follow commands in your terminal:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">brew install mailhog</span></span>
+<span class="line"></span></code></pre>
+<p>This command will install MailHog on your system, but won't enable the service.</p>
+<p>To enable the service, run the command below:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">brew services start mailhog</span></span>
+<span class="line"></span></code></pre>
+<p>This will instruct Homebrew to setup a background service so that MailHog is always running on your machine. You won't need to manually start anything, as long as Homebrew is running.</p>
+<p>Now, you can visit 127.0.0.1:8025 in a browser and you should be greeted with the MailHog application:</p>
+<p><img src="https://github.com/mailhog/MailHog/raw/master/docs/MailHog.png" alt="MailHog image" /></p>
+<h2>Configuring your Laravel application</h2>
+<p>To get MailHog working with your Laravel application, update the following keys in your <code>.env</code> file:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">MAIL_DRIVER=smtp</span></span>
+<span class="line"><span style="color: #24292F">MAIL_HOST=127.0.0.1</span></span>
+<span class="line"><span style="color: #24292F">MAIL_PORT=1025</span></span>
+<span class="line"><span style="color: #24292F">MAIL_USERNAME=null</span></span>
+<span class="line"><span style="color: #24292F">MAIL_PASSWORD=null</span></span>
+<span class="line"><span style="color: #24292F">MAIL_ENCRYPTION=null</span></span>
+<span class="line"></span></code></pre>
+<p>The reason the ports are different to the MailHog UI is that the SMTP server is running on port 1025, where as the HTTP server is running on 8025.</p>
+<p>If you send an email from your Laravel application now, you will see it pop up in the MailHog interface. You can use the code snippet below inside of Laravel Tinker to test:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #0550AE">Mail</span><span style="color: #CF222E">::</span><span style="color: #8250DF">raw</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;MailHog&#39;</span><span style="color: #24292F">, </span><span style="color: #CF222E">fn</span><span style="color: #24292F"> ($message) =&gt; $message</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">to</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;john@example.com&#39;</span><span style="color: #24292F">)</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">from</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;laravel@example.com&#39;</span><span style="color: #24292F">));</span></span>
+<span class="line"></span></code></pre>
+<h2>Setting up a <code>.test</code> domain</h2>
+<p><a href="https://laravel.com/docs/8.x/valet">Laravel Valet</a> makes this process super easy. All you need to do is run the following command in your terminal:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">valet proxy mailhog.test http://127.0.0.1:8025</span></span>
+<span class="line"></span></code></pre>
+<p>This command will create an Nginx configuration file for the domain <code>mailhog.test</code>, proxying all requests to that domain through to the MailHog HTTP server.</p>
+<p>It will also setup an SSL certificate, just like <code>valet secure</code> does for your normal Laravel sites.</p>
+
+    
+</body>
+</html>

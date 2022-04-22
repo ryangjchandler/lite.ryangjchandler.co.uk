@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>Delete All Rows for a Laravel Model</h2>
+
+<p>There are 2 way to delete all of the records for a model.</p>
+<ol>
+<li>
+<code>Model::truncate()</code>
+</li>
+</ol>
+<p>This is perfect for when you don't need to modify which records are being deleted and just want to delete all of them.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #0550AE">Post</span><span style="color: #CF222E">::</span><span style="color: #8250DF">truncate</span><span style="color: #24292F">();</span></span>
+<span class="line"></span></code></pre>
+<ol start="2">
+<li>
+<code>Model::query()-&gt;delete()</code>
+</li>
+</ol>
+<p>If you wanted to add some constraints onto the deletion, you'd likely want to use this method. The <code>::query()</code> method just returns a new <code>Builder</code> instance, so you can chain you extra methods with, some, intellisense.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #0550AE">Post</span><span style="color: #CF222E">::</span><span style="color: #8250DF">query</span><span style="color: #24292F">()</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">delete</span><span style="color: #24292F">();</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #0550AE">Post</span><span style="color: #CF222E">::</span><span style="color: #8250DF">query</span><span style="color: #24292F">()</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">where</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;created_at&#39;</span><span style="color: #24292F">, </span><span style="color: #0A3069">&#39;&lt;&#39;</span><span style="color: #24292F">, </span><span style="color: #8250DF">now</span><span style="color: #24292F">()</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">subYear</span><span style="color: #24292F">())</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">delete</span><span style="color: #24292F">();</span></span>
+<span class="line"></span></code></pre>
+
+    
+</body>
+</html>

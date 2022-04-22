@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>Simple Repositories in Laravel</h2>
+
+<p>The &quot;Repository pattern&quot; is essentially another level of abstraction on top of your database abstraction layer. In the context of Laravel, these are simple classes with methods that call more complex chains of methods on your model classes.</p>
+<p>Generally, each repository is responsible for <strong>one</strong> entity within your application. For example, a <code>UserRepository</code> should only be responsible for retrieving <code>User</code> records.</p>
+<h2>Abstract implementation</h2>
+<p>I've seen various people use traits to implement repositories directly inside of their models. Personally I think this gives the model too much responsibility, especially since models in Laravel are essentially &quot;God classes&quot; already.</p>
+<p>Instead, I'll create an <strong>abstract class</strong> that all of the repository classes will extend:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">&lt;?</span><span style="color: #0550AE">php</span></span>
+<span class="line"><span style="color: #24292F">  </span></span>
+<span class="line"><span style="color: #CF222E">namespace</span><span style="color: #24292F"> </span><span style="color: #953800">App\Repositories</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">abstract</span><span style="color: #24292F"> </span><span style="color: #CF222E">class</span><span style="color: #24292F"> </span><span style="color: #953800">Repository</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #6E7781">//</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>All of the repository classes will live inside of the <code>app/Repositories</code> folder and are namespaced accordingly. If you're following a domain-driven design, you could put this class inside of a &quot;shared&quot; domain.</p>
+<p>Each repository needs to have some model-based context, so we'll add a <code>static</code> property to our base class.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">&lt;?</span><span style="color: #0550AE">php</span></span>
+<span class="line"><span style="color: #24292F">  </span></span>
+<span class="line"><span style="color: #CF222E">namespace</span><span style="color: #24292F"> </span><span style="color: #953800">App\Repositories</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">abstract</span><span style="color: #24292F"> </span><span style="color: #CF222E">class</span><span style="color: #24292F"> </span><span style="color: #953800">Repository</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">protected</span><span style="color: #24292F"> </span><span style="color: #CF222E">static</span><span style="color: #24292F"> </span><span style="color: #CF222E">string</span><span style="color: #24292F"> $model;</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>I've chosen to make this <code>protected</code> since I don't need to access it externally, but I still need to have access to it / overwrite it in the child class. You could make it <code>public</code> if you wanted to do some conditional logic based on the value.</p>
+<p>This <code>$model</code> property should contain the fully-qualified namespace of a model class, for example <code>User::class</code>.</p>
+<p>The reason this implementation of the repository pattern is so simple is that all method calls from inside of the class will be delegated to an instance of <code>$model</code>.</p>
+<p>The missing piece of the puzzle is the all-mighty magic <code>__call()</code> method.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">&lt;?</span><span style="color: #0550AE">php</span></span>
+<span class="line"><span style="color: #24292F">  </span></span>
+<span class="line"><span style="color: #CF222E">namespace</span><span style="color: #24292F"> </span><span style="color: #953800">App\Repositories</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">Illuminate\Support\Facades\App</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">abstract</span><span style="color: #24292F"> </span><span style="color: #CF222E">class</span><span style="color: #24292F"> </span><span style="color: #953800">Repository</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">protected</span><span style="color: #24292F"> </span><span style="color: #CF222E">static</span><span style="color: #24292F"> </span><span style="color: #CF222E">string</span><span style="color: #24292F"> $model;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #0550AE">__call</span><span style="color: #24292F">(</span><span style="color: #CF222E">string</span><span style="color: #24292F"> $name, </span><span style="color: #CF222E">array</span><span style="color: #24292F"> $arguments)</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0550AE">App</span><span style="color: #CF222E">::</span><span style="color: #8250DF">make</span><span style="color: #24292F">(</span><span style="color: #CF222E">static::</span><span style="color: #24292F">$model)</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">{$name}(</span><span style="color: #CF222E">...</span><span style="color: #24292F">$arguments);</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>Now whenever we call a method that doesn't exist on your repository class, it will instead be delegated / deferred to an instance of the underlying <code>$model</code>.</p>
+<h2>An example</h2>
+<p>A quick example would be creating a <code>UserRepository</code> that has some useful methods for finding a <code>User</code> by <code>email</code>, <code>name</code> and <code>id</code>.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">&lt;?</span><span style="color: #0550AE">php</span></span>
+<span class="line"><span style="color: #24292F">  </span></span>
+<span class="line"><span style="color: #CF222E">namespace</span><span style="color: #24292F"> </span><span style="color: #953800">App\Repositories</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">App\User</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">class</span><span style="color: #24292F"> </span><span style="color: #953800">UserRepository</span><span style="color: #24292F"> </span><span style="color: #CF222E">extends</span><span style="color: #24292F"> </span><span style="color: #0550AE">Repository</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">protected</span><span style="color: #24292F"> </span><span style="color: #CF222E">static</span><span style="color: #24292F"> </span><span style="color: #CF222E">string</span><span style="color: #24292F"> $model </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0550AE">User</span><span style="color: #CF222E">::class</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">  </span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">findByName</span><span style="color: #24292F">(</span><span style="color: #CF222E">string</span><span style="color: #24292F"> $name)</span><span style="color: #CF222E">:</span><span style="color: #24292F"> </span><span style="color: #CF222E">?</span><span style="color: #0550AE">User</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">where</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;name&#39;</span><span style="color: #24292F">, $name)</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">first</span><span style="color: #24292F">();</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">  </span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">findByEmail</span><span style="color: #24292F">(</span><span style="color: #CF222E">string</span><span style="color: #24292F"> $email)</span><span style="color: #CF222E">:</span><span style="color: #24292F"> </span><span style="color: #CF222E">?</span><span style="color: #0550AE">User</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">where</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;email&#39;</span><span style="color: #24292F">, $email)</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">first</span><span style="color: #24292F">();</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">  </span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">findById</span><span style="color: #24292F">(</span><span style="color: #CF222E">int</span><span style="color: #24292F"> $id)</span><span style="color: #CF222E">:</span><span style="color: #24292F"> </span><span style="color: #CF222E">?</span><span style="color: #0550AE">User</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">find</span><span style="color: #24292F">($id);</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>Then, inside of a controller you could pull the repository in using dependency injection:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">&lt;?</span><span style="color: #0550AE">php</span></span>
+<span class="line"><span style="color: #24292F">  </span></span>
+<span class="line"><span style="color: #CF222E">namespace</span><span style="color: #24292F"> </span><span style="color: #953800">App\Http\Controllers</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">App\Repositories\UserRepository</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">class</span><span style="color: #24292F"> </span><span style="color: #953800">UserController</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">protected</span><span style="color: #24292F"> $users;</span></span>
+<span class="line"><span style="color: #24292F">  </span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #0550AE">__construct</span><span style="color: #24292F">(</span><span style="color: #0550AE">UserRepository</span><span style="color: #24292F"> $users)</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">users </span><span style="color: #CF222E">=</span><span style="color: #24292F"> $users;    </span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<h2>Sign off</h2>
+<p>I'd love to know if anyone else has used this pattern in their applications and how they implemented it. Comment below or <a href="https://twitter.com/ryangjchandler">tweet me</a> if you have.</p>
+<p>See ya! 👋</p>
+
+    
+</body>
+</html>

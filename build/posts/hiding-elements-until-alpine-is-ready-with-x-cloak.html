@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>Hiding elements until Alpine loads with `x-cloak`</h2>
+
+<p>If you've used Alpine before, you might have seen a brief flick when you load your site up. This is common if you have components that are conditionally rendered and are hidden by default.</p>
+<p>What's happening is the DOM is ready before Alpine takes controls of the element, so it shows up and then disappears. It can be quite jarring if you have lots of components on your site.</p>
+<p>To counter the problem, Alpine will look for an <code>x-cloak</code> attribute and remove it once it has loaded. This lets you defined some CSS that will set the element to <code>display: none</code> when the page loads.</p>
+<p>Add this bit of CSS to your site:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">[</span><span style="color: #0550AE">x-cloak</span><span style="color: #24292F">] {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0550AE">display</span><span style="color: #24292F">: </span><span style="color: #0550AE">none</span><span style="color: #24292F"> </span><span style="color: #CF222E">!important</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>And Bob's your uncle, the flicker problem has been fixed!</p>
+
+    
+</body>
+</html>

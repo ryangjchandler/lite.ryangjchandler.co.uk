@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>Manually Refreshing a Livewire Component</h2>
+
+<p>Livewire's polling API is great for periodically refreshing your component or invoking an action, but one of the more quietly documented features is the ability to manually refresh a component using a &quot;magic&quot; action.</p>
+<p>Here's how:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">button</span><span style="color: #24292F"> </span><span style="color: #0550AE">wire:click</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;$refresh&quot;</span><span style="color: #24292F">&gt;Reload Component&lt;/</span><span style="color: #116329">button</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">&lt;/</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<p>And that is it! The &quot;magic&quot; <code>$refresh</code> action can be used, anywhere an action can, in your component. Livewire will pick up the action name and simply re-render the component.</p>
+
+    
+</body>
+</html>

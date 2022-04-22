@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>Execute an AWS Lambda Function from the Terminal</h2>
+
+<h2>Getting started</h2>
+<p>Before you go any further, you want to make sure you've got the AWS CLI installed. If you haven't already got it installed, you can follow the <a href="https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html">official instructions here</a>.</p>
+<h2>Generating a payload</h2>
+<p>Unfortunately, the AWS CLI can't accept the raw contents of a file as the payload when invoking a Lambda function. Instead, you need to generate a base 64 encoded version of the file.</p>
+<p>On Unix systems, this can be done using the <code>base64</code> command. I typically store my generic payload inside of a <code>payload-raw.json</code> file and then output the base 64 encoded version to <code>payload.json</code>.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">base64 payload-raw.json</span></span>
+<span class="line"></span></code></pre>
+<p>This command will encode the raw JSON into base 64. To output the result of this command, we can just redirect <code>stdout</code> into a file.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">base64 payload-raw.json </span><span style="color: #CF222E">&gt;</span><span style="color: #24292F"> payload.json</span></span>
+<span class="line"></span></code></pre>
+<h2>Invoke the Lambda</h2>
+<p>You can invoke your Lambda function using the <code>aws lambda</code> command. This command requires a few options so that it knows which function to execute.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">aws lambda \</span></span>
+<span class="line"><span style="color: #24292F">--function-name NameOfFunctionHere</span></span>
+<span class="line"></span></code></pre>
+<p>If we want to send through our base 64 encoded payload, we can use the <code>--payload</code> option and specify the file that needs to be used.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">aws lambda \</span></span>
+<span class="line"><span style="color: #24292F">--function-name NameOfFunctionHere</span></span>
+<span class="line"><span style="color: #24292F">--payload file://payload.json</span></span>
+<span class="line"></span></code></pre>
+<p>You need to prefix the file with <code>file://</code> protocol as the AWS CLI also supports sending payloads using <code>http://</code> and <code>https://</code>.</p>
+<p>If you want to save the output of the execution to a file, you can specify the output file at the end of the command.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">aws lambda \</span></span>
+<span class="line"><span style="color: #24292F">--function-name NameOfFunctionHere</span></span>
+<span class="line"><span style="color: #24292F">--payload file://payload.json</span></span>
+<span class="line"><span style="color: #24292F">output.json</span></span>
+<span class="line"></span></code></pre>
+
+    
+</body>
+</html>

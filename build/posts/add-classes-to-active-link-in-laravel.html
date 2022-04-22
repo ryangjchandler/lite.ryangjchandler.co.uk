@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>Add Classes to Active Link in Laravel</h2>
+
+<p>Generally speaking, the easiest way to do this is comparing the name of the current route and the one you'd like to test against.</p>
+<p>Luckily, Laravel's <code>Illuminate\Support\Facades\Route</code> class provides a nice <code>currentRouteName()</code> method that we can use to make a comparison.</p>
+<p>Let's create a little function that you can re-use throughout your application.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">Illuminate\Support\Facades\Route</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">active_route</span><span style="color: #24292F">(</span><span style="color: #CF222E">string</span><span style="color: #24292F"> $name)</span><span style="color: #CF222E">:</span><span style="color: #24292F"> </span><span style="color: #CF222E">bool</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0550AE">Route</span><span style="color: #CF222E">::</span><span style="color: #8250DF">currentRouteName</span><span style="color: #24292F">() </span><span style="color: #CF222E">===</span><span style="color: #24292F"> $name;</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>This function is great, but it doesn't do anything with classes. Let's add a second parameter so that a class string such as <code>'bg-gray-900'</code> could be passed through.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">Illuminate\Support\Facades\Route</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">active_route</span><span style="color: #24292F">(</span><span style="color: #CF222E">string</span><span style="color: #24292F"> $name, </span><span style="color: #CF222E">string</span><span style="color: #24292F"> $classes)</span><span style="color: #CF222E">:</span><span style="color: #24292F"> </span><span style="color: #CF222E">bool</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">if</span><span style="color: #24292F"> ($active </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0550AE">Route</span><span style="color: #CF222E">::</span><span style="color: #8250DF">currentRouteName</span><span style="color: #24292F">() </span><span style="color: #CF222E">===</span><span style="color: #24292F"> $name) {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #0550AE">echo</span><span style="color: #24292F"> $classes;</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">  </span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">return</span><span style="color: #24292F"> $active;</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>Perfect! Now we can pass in the name of a route and a class string and it will <code>echo</code> the class if the current route matches the one provided.</p>
+<p>If we wanted to, we could also wrap this into a custom Blade directive. In any <code>ServiceProvider::boot()</code>, add the following snippet:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #0550AE">Blade</span><span style="color: #CF222E">::</span><span style="color: #8250DF">directive</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;active&#39;</span><span style="color: #24292F">, </span><span style="color: #CF222E">function</span><span style="color: #24292F"> ($expression) {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0A3069">&quot;&lt;?php \active_route({</span><span style="color: #24292F">$expression</span><span style="color: #0A3069">}); ?&gt;&quot;</span></span>
+<span class="line"><span style="color: #24292F">});</span></span>
+<span class="line"></span></code></pre>
+<p>Inside of a Blade template, we could now do:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #8250DF">@active</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;projects.index&#39;</span><span style="color: #24292F">, </span><span style="color: #0A3069">&#39;bg-gray-900 hover:bg-gray-500&#39;</span><span style="color: #24292F">)</span></span>
+<span class="line"></span></code></pre>
+<p>And it would work just the same as calling <code>active_route()</code> directly. Nice!</p>
+<h2>Going beyond</h2>
+<p>One way this could be improved is conditionally checking whether or not a second parameter is passed through via the directive. This means you could treat <code>@active</code> as an <code>if</code> statement and do something based on the true and false conditions.</p>
+<p>Let's make the second parameter to <code>active_route()</code> optional and add some checks to see how many parameters the directive receives:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">Illuminate\Support\Facades\Route</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">active_route</span><span style="color: #24292F">(</span><span style="color: #CF222E">string</span><span style="color: #24292F"> $name, </span><span style="color: #CF222E">string</span><span style="color: #24292F"> $classes </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0550AE">null</span><span style="color: #24292F">)</span><span style="color: #CF222E">:</span><span style="color: #24292F"> </span><span style="color: #CF222E">bool</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">if</span><span style="color: #24292F"> ($active </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0550AE">Route</span><span style="color: #CF222E">::</span><span style="color: #8250DF">currentRouteName</span><span style="color: #24292F">() </span><span style="color: #CF222E">===</span><span style="color: #24292F"> $name </span><span style="color: #CF222E">&amp;&amp;</span><span style="color: #24292F"> $classes) {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #0550AE">echo</span><span style="color: #24292F"> $classes;</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">  </span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">return</span><span style="color: #24292F"> $active;</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">Illuminate\Support\Facades\Blade</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #0550AE">Blade</span><span style="color: #CF222E">::</span><span style="color: #8250DF">directive</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;active&#39;</span><span style="color: #24292F">, </span><span style="color: #CF222E">function</span><span style="color: #24292F"> ($expression) {</span></span>
+<span class="line"><span style="color: #24292F">    $parts </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0550AE">explode</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;,&#39;</span><span style="color: #24292F">, </span><span style="color: #0550AE">str_replace</span><span style="color: #24292F">([</span><span style="color: #0A3069">&#39;(&#39;</span><span style="color: #24292F">, </span><span style="color: #0A3069">&#39;)&#39;</span><span style="color: #24292F">], </span><span style="color: #0A3069">&#39;&#39;</span><span style="color: #24292F">, $expression));</span></span>
+<span class="line"><span style="color: #24292F">  </span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">if</span><span style="color: #24292F"> (</span><span style="color: #0550AE">count</span><span style="color: #24292F">($parts) </span><span style="color: #CF222E">===</span><span style="color: #24292F"> </span><span style="color: #0550AE">1</span><span style="color: #24292F">) {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0A3069">&quot;&lt;?php if (active_route({</span><span style="color: #24292F">$expression</span><span style="color: #0A3069">})) : ?&gt;&quot;</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">  </span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0A3069">&quot;&lt;?php \active_route({</span><span style="color: #24292F">$expression</span><span style="color: #0A3069">}); ?&gt;&quot;</span></span>
+<span class="line"><span style="color: #24292F">});</span></span>
+<span class="line"></span></code></pre>
+<p>It seems a bit confusing at first, but I'll break it down:</p>
+<ol>
+<li>
+<p>When our custom directive handler is called, it will receive <code>$expression</code> as a string. For example, <code>@active('projects.index')</code> will mean expression is <code>('projects.index')</code>. The parentheses are included, so we need to remove those from the string before running <code>explode()</code>.</p>
+</li>
+<li>
+<p><code>explode(',', ...)</code> will split the string after each <code>,</code>. If two arguments are provided, then were should be a comma separating them. You could run into problems here if you use commas in your route names, but I've never seen anybody do that, most people use full-stops. In the case that no commas are present, <code>$parts</code> will just be an array with a single item.</p>
+</li>
+<li>
+<p>If there is only 1 &quot;part&quot; (the length of <code>$parts</code> is 1), then we can assume that we're in <code>if else</code> mode, so we return an <code>if</code> statement instead of the string. Luckily, our <code>active_route()</code> function already returns a boolean, no matter the number of arguments received.</p>
+</li>
+</ol>
+<p>Now, we can do something like:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">@</span><span style="color: #8250DF">active</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;projects.index&#39;</span><span style="color: #24292F">) </span><span style="color: #0550AE">bg</span><span style="color: #CF222E">-</span><span style="color: #0550AE">gray</span><span style="color: #CF222E">-</span><span style="color: #0550AE">900</span><span style="color: #24292F"> </span><span style="color: #0550AE">hover</span><span style="color: #24292F">:</span><span style="color: #0550AE">bg</span><span style="color: #CF222E">-</span><span style="color: #0550AE">gray</span><span style="color: #CF222E">-</span><span style="color: #0550AE">500</span><span style="color: #24292F"> </span><span style="color: #CF222E">@else</span><span style="color: #24292F"> </span><span style="color: #0550AE">bg</span><span style="color: #CF222E">-</span><span style="color: #0550AE">gray</span><span style="color: #CF222E">-</span><span style="color: #0550AE">400</span><span style="color: #24292F"> </span><span style="color: #CF222E">@endif</span></span>
+<span class="line"></span></code></pre>
+<h3>@endactive vs. @endif</h3>
+<p>We've only got a single <code>if</code> statement, so using <code>@endif</code> is perfectly fine. If you wanted to make it a bit prettier, you could just add the following bit of code;</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #0550AE">Blade</span><span style="color: #CF222E">::</span><span style="color: #8250DF">directive</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;endactive&#39;</span><span style="color: #24292F">, </span><span style="color: #CF222E">function</span><span style="color: #24292F"> () {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;&lt;?php endif; ?&gt;&#39;</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">});</span></span>
+<span class="line"></span></code></pre>
+
+    
+</body>
+</html>

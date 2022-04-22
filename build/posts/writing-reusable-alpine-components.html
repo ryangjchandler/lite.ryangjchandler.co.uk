@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>Writing Reusable Alpine Components</h2>
+
+<p>Since Alpine lives directly in the markup, it can be difficult to abstract components in the correct way. I'd like to go over a few ways that you can abstract your component logic into more re-usable components.</p>
+<h3>The data function</h3>
+<p>When you initialise an Alpine component, you probably put the object expression directly inside of the <code>x-data</code> attribute.</p>
+<p>This approach works well for small components that only have a couple of pieces of state and is one of Alpine's strongest selling points. It can get out of hand for larger components, especially those that have large methods for sending AJAX requests, handling form logic, etc.</p>
+<p>The simplest way to abstract these large methods is by using functions as your data source. This is similar to how the <code>data()</code> method in Vue works, where you return an object from that function.</p>
+<p>This is a component before being abstracted.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">div</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-data</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;{</span></span>
+<span class="line"><span style="color: #0A3069">    name: &#39;&#39;,</span></span>
+<span class="line"><span style="color: #0A3069">    email: &#39;&#39;,</span></span>
+<span class="line"><span style="color: #0A3069">    password: &#39;&#39;,</span></span>
+<span class="line"><span style="color: #0A3069">    errors: {</span></span>
+<span class="line"><span style="color: #0A3069">        name: [],</span></span>
+<span class="line"><span style="color: #0A3069">        email: [],</span></span>
+<span class="line"><span style="color: #0A3069">        password: [],</span></span>
+<span class="line"><span style="color: #0A3069">    },</span></span>
+<span class="line"><span style="color: #0A3069">    validate() {</span></span>
+<span class="line"><span style="color: #0A3069">        if (! this.name) {</span></span>
+<span class="line"><span style="color: #0A3069">            this.errors.name.push(&#39;You must enter your name.&#39;)</span></span>
+<span class="line"><span style="color: #0A3069">        }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #0A3069">        if (this.email &amp;&amp; ! this.email.includes(&#39;@&#39;)) {</span></span>
+<span class="line"><span style="color: #0A3069">            this.errors.email.push(&#39;You must enter a valid email address&#39;)</span></span>
+<span class="line"><span style="color: #0A3069">        }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #0A3069">        if (this.password &amp;&amp; this.password.length </span><span style="color: #82071E; font-style: italic">&lt;</span><span style="color: #0A3069"> 8) {</span></span>
+<span class="line"><span style="color: #0A3069">            this.errors.password.push(&#39;Your password must be at least 8 characters long.&#39;)</span></span>
+<span class="line"><span style="color: #0A3069">        }</span></span>
+<span class="line"><span style="color: #0A3069">    }</span></span>
+<span class="line"><span style="color: #0A3069">}&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">input</span><span style="color: #24292F"> </span><span style="color: #0550AE">type</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;text&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-model</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;name&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">@input</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;validate&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">template</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-for</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;error in errors.name&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">        &lt;</span><span style="color: #116329">p</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-text</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;error&quot;</span><span style="color: #24292F">&gt;&lt;/</span><span style="color: #116329">p</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;/</span><span style="color: #116329">template</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">input</span><span style="color: #24292F"> </span><span style="color: #0550AE">type</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;text&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-model</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;email&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">@input</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;validate&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">template</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-for</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;error in errors.email&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">        &lt;</span><span style="color: #116329">p</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-text</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;error&quot;</span><span style="color: #24292F">&gt;&lt;/</span><span style="color: #116329">p</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;/</span><span style="color: #116329">template</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">input</span><span style="color: #24292F"> </span><span style="color: #0550AE">type</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;password&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-model</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;password&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">@input</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;validate&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">template</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-for</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;error in errors.password&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">        &lt;</span><span style="color: #116329">p</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-text</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;error&quot;</span><span style="color: #24292F">&gt;&lt;/</span><span style="color: #116329">p</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;/</span><span style="color: #116329">template</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">&lt;/</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<p>Pretty nasty, right? Moving this to a function is pretty simple. You need to create a function inside of a <code>&lt;script&gt;</code> tag somewhere on the page and make the entire <code>x-data</code> object the return value of that function.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">script</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">window.</span><span style="color: #8250DF">profileForm</span><span style="color: #24292F"> </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> () {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">return</span><span style="color: #24292F"> {</span></span>
+<span class="line"><span style="color: #24292F">        name: </span><span style="color: #0A3069">&#39;&#39;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">        email: </span><span style="color: #0A3069">&#39;&#39;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">        password: </span><span style="color: #0A3069">&#39;&#39;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">        errors: {</span></span>
+<span class="line"><span style="color: #24292F">            name: [],</span></span>
+<span class="line"><span style="color: #24292F">            email: [],</span></span>
+<span class="line"><span style="color: #24292F">            password: [],</span></span>
+<span class="line"><span style="color: #24292F">        },</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #8250DF">validate</span><span style="color: #24292F">() {</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">if</span><span style="color: #24292F"> (</span><span style="color: #CF222E">!</span><span style="color: #24292F"> </span><span style="color: #0550AE">this</span><span style="color: #24292F">.name) {</span></span>
+<span class="line"><span style="color: #24292F">                </span><span style="color: #0550AE">this</span><span style="color: #24292F">.errors.name.</span><span style="color: #8250DF">push</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;You must enter your name.&#39;</span><span style="color: #24292F">)</span></span>
+<span class="line"><span style="color: #24292F">            }</span></span>
+<span class="line"><span style="color: #24292F">    </span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">if</span><span style="color: #24292F"> (</span><span style="color: #0550AE">this</span><span style="color: #24292F">.email </span><span style="color: #CF222E">&amp;&amp;</span><span style="color: #24292F"> </span><span style="color: #CF222E">!</span><span style="color: #24292F"> </span><span style="color: #0550AE">this</span><span style="color: #24292F">.email.</span><span style="color: #8250DF">includes</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;@&#39;</span><span style="color: #24292F">)) {</span></span>
+<span class="line"><span style="color: #24292F">                </span><span style="color: #0550AE">this</span><span style="color: #24292F">.errors.email.</span><span style="color: #8250DF">push</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;You must enter a valid email address&#39;</span><span style="color: #24292F">)</span></span>
+<span class="line"><span style="color: #24292F">            }</span></span>
+<span class="line"><span style="color: #24292F">    </span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">if</span><span style="color: #24292F"> (</span><span style="color: #0550AE">this</span><span style="color: #24292F">.password </span><span style="color: #CF222E">&amp;&amp;</span><span style="color: #24292F"> </span><span style="color: #0550AE">this</span><span style="color: #24292F">.password.</span><span style="color: #0550AE">length</span><span style="color: #24292F"> </span><span style="color: #CF222E">&lt;</span><span style="color: #24292F"> </span><span style="color: #0550AE">8</span><span style="color: #24292F">) {</span></span>
+<span class="line"><span style="color: #24292F">                </span><span style="color: #0550AE">this</span><span style="color: #24292F">.errors.password.</span><span style="color: #8250DF">push</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;Your password must be at least 8 characters long.&#39;</span><span style="color: #24292F">)</span></span>
+<span class="line"><span style="color: #24292F">            }</span></span>
+<span class="line"><span style="color: #24292F">        }</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"><span style="color: #24292F">&lt;/</span><span style="color: #116329">script</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<p>Then replace the value of <code>x-data</code> with the name of the function, in this case <code>profileForm</code>.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">div</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-data</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;profileForm()&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">input</span><span style="color: #24292F"> </span><span style="color: #0550AE">type</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;text&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-model</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;name&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">@input</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;validate&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">template</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-for</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;error in errors.name&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">        &lt;</span><span style="color: #116329">p</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-text</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;error&quot;</span><span style="color: #24292F">&gt;&lt;/</span><span style="color: #116329">p</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;/</span><span style="color: #116329">template</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">input</span><span style="color: #24292F"> </span><span style="color: #0550AE">type</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;text&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-model</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;email&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">@input</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;validate&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">template</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-for</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;error in errors.email&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">        &lt;</span><span style="color: #116329">p</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-text</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;error&quot;</span><span style="color: #24292F">&gt;&lt;/</span><span style="color: #116329">p</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;/</span><span style="color: #116329">template</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">input</span><span style="color: #24292F"> </span><span style="color: #0550AE">type</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;password&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-model</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;password&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">@input</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;validate&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">template</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-for</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;error in errors.password&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">        &lt;</span><span style="color: #116329">p</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-text</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;error&quot;</span><span style="color: #24292F">&gt;&lt;/</span><span style="color: #116329">p</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;/</span><span style="color: #116329">template</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">&lt;/</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<p>When you look at this again in the future, it will be much easier to read since you won't have the bloat of the <code>x-data</code> directive hiding all of the markup.</p>
+<p><strong>Note</strong>: this is a simple trick for larger components but you should be careful to not abstract too early. If you are finding it difficult to manage your Alpine component from the <code>x-data</code> attribute, this one is definitely for you.</p>
+<p>Since I'm a Laravel developer, I generally use a <code>@stack</code> on my layout file and push to it from inside of this partial.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">@push(&#39;scripts&#39;)</span></span>
+<span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">script</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">window.</span><span style="color: #8250DF">profileForm</span><span style="color: #24292F"> </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> () {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">return</span><span style="color: #24292F"> {</span></span>
+<span class="line"><span style="color: #24292F">        name: </span><span style="color: #0A3069">&#39;&#39;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">        email: </span><span style="color: #0A3069">&#39;&#39;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">        password: </span><span style="color: #0A3069">&#39;&#39;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">        errors: {</span></span>
+<span class="line"><span style="color: #24292F">            name: [],</span></span>
+<span class="line"><span style="color: #24292F">            email: [],</span></span>
+<span class="line"><span style="color: #24292F">            password: [],</span></span>
+<span class="line"><span style="color: #24292F">        },</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #8250DF">validate</span><span style="color: #24292F">() {</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">if</span><span style="color: #24292F"> (</span><span style="color: #CF222E">!</span><span style="color: #24292F"> </span><span style="color: #0550AE">this</span><span style="color: #24292F">.name) {</span></span>
+<span class="line"><span style="color: #24292F">                </span><span style="color: #0550AE">this</span><span style="color: #24292F">.errors.name.</span><span style="color: #8250DF">push</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;You must enter your name.&#39;</span><span style="color: #24292F">)</span></span>
+<span class="line"><span style="color: #24292F">            }</span></span>
+<span class="line"><span style="color: #24292F">    </span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">if</span><span style="color: #24292F"> (</span><span style="color: #0550AE">this</span><span style="color: #24292F">.email </span><span style="color: #CF222E">&amp;&amp;</span><span style="color: #24292F"> </span><span style="color: #CF222E">!</span><span style="color: #24292F"> </span><span style="color: #0550AE">this</span><span style="color: #24292F">.email.</span><span style="color: #8250DF">includes</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;@&#39;</span><span style="color: #24292F">)) {</span></span>
+<span class="line"><span style="color: #24292F">                </span><span style="color: #0550AE">this</span><span style="color: #24292F">.errors.email.</span><span style="color: #8250DF">push</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;You must enter a valid email address&#39;</span><span style="color: #24292F">)</span></span>
+<span class="line"><span style="color: #24292F">            }</span></span>
+<span class="line"><span style="color: #24292F">    </span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">if</span><span style="color: #24292F"> (</span><span style="color: #0550AE">this</span><span style="color: #24292F">.password </span><span style="color: #CF222E">&amp;&amp;</span><span style="color: #24292F"> </span><span style="color: #0550AE">this</span><span style="color: #24292F">.password.</span><span style="color: #0550AE">length</span><span style="color: #24292F"> </span><span style="color: #CF222E">&lt;</span><span style="color: #24292F"> </span><span style="color: #0550AE">8</span><span style="color: #24292F">) {</span></span>
+<span class="line"><span style="color: #24292F">                </span><span style="color: #0550AE">this</span><span style="color: #24292F">.errors.password.</span><span style="color: #8250DF">push</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;Your password must be at least 8 characters long.&#39;</span><span style="color: #24292F">)</span></span>
+<span class="line"><span style="color: #24292F">            }</span></span>
+<span class="line"><span style="color: #24292F">        }</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"><span style="color: #24292F">&lt;/</span><span style="color: #116329">script</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">@endpush</span></span>
+<span class="line"></span></code></pre>
+<p>If you're using the latest version of Laravel, you can also wrap this <code>@push</code> in an <code>@once</code> and it will only ever be pushed to the stack once in the same render.</p>
+<p><strong><code>x-spread</code></strong></p>
+<p>This directive, <code>x-spread</code>, was introduced in <a href="https://github.com/alpinejs/alpine/releases">v2.4 of Alpine</a>. It allows you to bind a collection of directives to a component, similar to <code>x-bind=&quot;{}&quot;</code> in Vue.</p>
+<p>This one kinds of follows on from the previous tip, where you can extract some re-usable logic into a function and then use <code>x-spread</code> to apply multiple directives at once.</p>
+<p>Here's an example of a simple dropdown component built with Alpine. It involves binding some <code>aria-</code> attributes and a few click handlers. It also has no styles (but I'm sure you could make it look pretty).</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">div</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-data</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;{ open: false }&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">@keydown.window.escape</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;open = false&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">@click.away</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;open = false&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">        &lt;</span><span style="color: #116329">span</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">            &lt;</span><span style="color: #116329">button</span><span style="color: #24292F"> </span><span style="color: #0550AE">@click</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;open = !open&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">type</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;button&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">id</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;options-menu&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">aria-haspopup</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;true&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-bind:aria-expanded</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;open&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">                Options</span></span>
+<span class="line"><span style="color: #24292F">            &lt;/</span><span style="color: #116329">button</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">        &lt;/</span><span style="color: #116329">span</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;/</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">div</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-show</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;open&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">        &lt;</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">            &lt;</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">                &lt;</span><span style="color: #116329">a</span><span style="color: #24292F"> </span><span style="color: #0550AE">href</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;#&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">role</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;menuitem&quot;</span><span style="color: #24292F">&gt;Account settings&lt;/</span><span style="color: #116329">a</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">                &lt;</span><span style="color: #116329">a</span><span style="color: #24292F"> </span><span style="color: #0550AE">href</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;#&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">role</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;menuitem&quot;</span><span style="color: #24292F">&gt;Support&lt;/</span><span style="color: #116329">a</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">                &lt;</span><span style="color: #116329">a</span><span style="color: #24292F"> </span><span style="color: #0550AE">href</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;#&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">role</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;menuitem&quot;</span><span style="color: #24292F">&gt;License&lt;/</span><span style="color: #116329">a</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">                &lt;</span><span style="color: #116329">form</span><span style="color: #24292F"> </span><span style="color: #0550AE">method</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;POST&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">action</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;#&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">                    &lt;</span><span style="color: #116329">button</span><span style="color: #24292F"> </span><span style="color: #0550AE">type</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;submit&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">role</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;menuitem&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">                        Sign out</span></span>
+<span class="line"><span style="color: #24292F">                    &lt;/</span><span style="color: #116329">button</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">                &lt;/</span><span style="color: #116329">form</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">            &lt;/</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">        &lt;/</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;/</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">&lt;/</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<p>The first step here is to move to an <code>x-data</code> function, like we did earlier. This is only going to hold a single piece of state, but it will be much easier to setup the <code>x-spread</code> directives later on.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">div</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-data</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;dropdown()&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">@keydown.window.escape</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;open = false&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">@click.away</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;open = false&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #6E7781">&lt;!-- Rest of markup here --&gt;</span></span>
+<span class="line"><span style="color: #24292F">&lt;/</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">window.</span><span style="color: #8250DF">dropdown</span><span style="color: #24292F"> </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> () {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">return</span><span style="color: #24292F"> {</span></span>
+<span class="line"><span style="color: #24292F">        open: </span><span style="color: #0550AE">false</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>To start using the <code>x-spread</code> directive, we need to define an object on our component that will be used to bind the rest of the directives.</p>
+<p>Let's first start with the <code>keydown</code> and <code>click</code> handlers on the parent element. I'm going to refer to this particular element as the &quot;wrapper&quot;, so let's call the object <code>wrapper</code>.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">window.</span><span style="color: #8250DF">dropdown</span><span style="color: #24292F"> </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> () {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">return</span><span style="color: #24292F"> {</span></span>
+<span class="line"><span style="color: #24292F">        open: </span><span style="color: #0550AE">false</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">        wrapper: {</span></span>
+<span class="line"><span style="color: #24292F">            [</span><span style="color: #0A3069">&#39;@keydown.window.escape&#39;</span><span style="color: #24292F">]() {</span></span>
+<span class="line"><span style="color: #24292F">                </span><span style="color: #0550AE">this</span><span style="color: #24292F">.open </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0550AE">false</span></span>
+<span class="line"><span style="color: #24292F">            },</span></span>
+<span class="line"><span style="color: #24292F">            [</span><span style="color: #0A3069">&#39;@click.away&#39;</span><span style="color: #24292F">]() {</span></span>
+<span class="line"><span style="color: #24292F">                </span><span style="color: #0550AE">this</span><span style="color: #24292F">.open </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0550AE">false</span></span>
+<span class="line"><span style="color: #24292F">            }</span></span>
+<span class="line"><span style="color: #24292F">        }</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>The <code>wrapper</code> object now contains 2 methods, each one matches the name of the directive it will replace and the function logic matches that of the expression.</p>
+<p><strong>Note</strong>: Since this is now running inside of a function, Alpine will bind your data object to the <code>this</code> context of the function so be sure to use <code>this.[prop]</code> when reading and writing props.</p>
+<p>The only thing left to do with our wrapper element is to remove the directives and add the new <code>x-spread</code> directive:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">div</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-data</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;dropdown()&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-spread</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;wrapper&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #6E7781">&lt;!-- Rest of markup here --&gt;</span></span>
+<span class="line"><span style="color: #24292F">&lt;/</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<p>Under the hood, Alpine will go through the <code>wrapper</code> object and take each method name, setup the directive as usual and use the function as the expression / callback for the directive.</p>
+<p>The same technique can be applied for the rest of the components too - the <code>trigger</code> and <code>menu</code> itself.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">window.</span><span style="color: #8250DF">dropdown</span><span style="color: #24292F"> </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> () {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">return</span><span style="color: #24292F"> {</span></span>
+<span class="line"><span style="color: #24292F">        open: </span><span style="color: #0550AE">false</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">        wrapper: {</span></span>
+<span class="line"><span style="color: #24292F">            [</span><span style="color: #0A3069">&#39;@keydown.window.escape&#39;</span><span style="color: #24292F">]() {</span></span>
+<span class="line"><span style="color: #24292F">                </span><span style="color: #0550AE">this</span><span style="color: #24292F">.open </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0550AE">false</span></span>
+<span class="line"><span style="color: #24292F">            },</span></span>
+<span class="line"><span style="color: #24292F">            [</span><span style="color: #0A3069">&#39;@click.away&#39;</span><span style="color: #24292F">]() {</span></span>
+<span class="line"><span style="color: #24292F">                </span><span style="color: #0550AE">this</span><span style="color: #24292F">.open </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0550AE">false</span></span>
+<span class="line"><span style="color: #24292F">            }</span></span>
+<span class="line"><span style="color: #24292F">        },</span></span>
+<span class="line"><span style="color: #24292F">        trigger: {</span></span>
+<span class="line"><span style="color: #24292F">            [</span><span style="color: #0A3069">&#39;@click&#39;</span><span style="color: #24292F">]() {</span></span>
+<span class="line"><span style="color: #24292F">                </span><span style="color: #0550AE">this</span><span style="color: #24292F">.open </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #CF222E">!</span><span style="color: #24292F"> </span><span style="color: #0550AE">this</span><span style="color: #24292F">.open</span></span>
+<span class="line"><span style="color: #24292F">            },</span></span>
+<span class="line"><span style="color: #24292F">            [</span><span style="color: #0A3069">&#39;x-bind:aria-expanded&#39;</span><span style="color: #24292F">]() {</span></span>
+<span class="line"><span style="color: #24292F">                </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0550AE">this</span><span style="color: #24292F">.open</span></span>
+<span class="line"><span style="color: #24292F">            }</span></span>
+<span class="line"><span style="color: #24292F">        },</span></span>
+<span class="line"><span style="color: #24292F">        menu: {</span></span>
+<span class="line"><span style="color: #24292F">            [</span><span style="color: #0A3069">&#39;x-show&#39;</span><span style="color: #24292F">]() {</span></span>
+<span class="line"><span style="color: #24292F">                </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0550AE">this</span><span style="color: #24292F">.open</span></span>
+<span class="line"><span style="color: #24292F">            }</span></span>
+<span class="line"><span style="color: #24292F">        }</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>And the markup...</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">div</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-data</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;dropdown()&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-spread</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;wrapper&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">        &lt;</span><span style="color: #116329">span</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">            &lt;</span><span style="color: #116329">button</span><span style="color: #24292F"> </span><span style="color: #0550AE">type</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;button&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">id</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;options-menu&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">aria-haspopup</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;true&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-spread</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;trigger&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">                </span><span style="color: #6E7781">&lt;!-- Button markup here --&gt;</span></span>
+<span class="line"><span style="color: #24292F">            &lt;/</span><span style="color: #116329">button</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">        &lt;/</span><span style="color: #116329">span</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;/</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">div</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-spread</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;menu&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #6E7781">&lt;!-- Rest of markup here --&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;/</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">&lt;/</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<h3>Mixins</h3>
+<p>In the context of a Vue component, <a href="https://vuejs.org/v2/guide/mixins.html">mixins</a> are just a way of having small bits of re-usable code that could be used throughout your application, in multiple types of component.</p>
+<p>Since Alpine evaluates vanilla JavaScript and all of the data is powered by an object, this pattern is even easier to achieve through the use of the <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax">spread operator</a>.</p>
+<p>Let's take our dropdown function from the previous section and use that as an example.</p>
+<p>Imagine I had a component that needed the logic for a dropdown, but also some extra logic on top for changing the icon shown inside of a <code>&lt;button&gt;</code> element. The icon changing logic is only specific to this single component so it doesn't make much sense to abstract that out into the <code>dropdown()</code> function.</p>
+<p>How about this, instead:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">div</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-data</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;{ icon: &#39;up&#39;, ...dropdown() }&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #6E7781">&lt;!-- Rest of markup here --&gt;</span></span>
+<span class="line"><span style="color: #24292F">&lt;/</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<p>It's truly that simple. Since the <code>window.dropdown</code> function returns an object when invoked, we can &quot;spread&quot; the contents of that object into our data and still have access to the <code>trigger</code>, <code>wrapper</code> and <code>menu</code> objects for use with <code>x-spread</code>.</p>
+<p>This pattern is really powerful for renderless components that are likely going to be used in multiple projects too. You could move the <code>window.dropdown</code> method into a re-usable JavaScript file or package and use it anywhere and everywhere (Alpine exists), then sprinkle your styling on top (hopefully with <a href="https://tailwindcss.com">Tailwind</a>).</p>
+<p><strong>Note</strong>: You should be careful of any property name clashes, for example, multiple <code>open</code> props. To workaround this, you might accept an argument to the <code>dropdown()</code> function that has a unique &quot;key&quot; or &quot;prefix&quot; and add that to each of the props returned.</p>
+<h2>Sign off</h2>
+<p>This article was quite a long one, but these are some of the more common patterns for abstracting component logic and making your components more re-usable.</p>
+<p>I didn't touch on server-side abstraction too much because not everybody has the power of <a href="https://laravel.com/docs/7.x/blade#components">Blade components</a> at their disposal, but I'm sure you can find your own ways of doing that too.</p>
+<p>If you enjoyed this article and found it useful, I'd love to know on <a href="https://twitter.com/ryangjchandler">Twitter</a> since I would like to cover these concepts in more detail with better examples in the future.</p>
+
+    
+</body>
+</html>

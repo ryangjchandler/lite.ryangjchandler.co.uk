@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>3 Simple Tailwind CSS Tips and Tricks</h2>
+
+<h2>1. Always know the current breakpoint</h2>
+<p>Finding it hard to remember what breakpoint you're currently viewing your screen at? Struggle no more!</p>
+<p>Install the <code>tailwindcss-debug-screens</code> plugin and you'll be provided with a small visual helper in the bottom-left of your site.</p>
+<p>Run this command in your project directory:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">npm install tailwindcss-debug-screens --save-dev</span></span>
+<span class="line"></span></code></pre>
+<p>Then register the plugin in your Tailwind configuration file:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #0550AE">module</span><span style="color: #24292F">.</span><span style="color: #0550AE">exports</span><span style="color: #24292F"> </span><span style="color: #CF222E">=</span><span style="color: #24292F"> {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #6E7781">//...</span></span>
+<span class="line"><span style="color: #24292F">    plugins: [</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #0550AE">require</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;tailwindcss-debug-screens&#39;</span><span style="color: #24292F">),</span></span>
+<span class="line"><span style="color: #24292F">    ]</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>And finally add the new <code>debug-screens</code> class to your <code>&lt;body&gt;</code> tag:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">body</span><span style="color: #24292F"> </span><span style="color: #0550AE">class</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;debug-screens&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<blockquote>
+<p>You should ensure that this class is only added to the <code>&lt;body&gt;</code> in development. Wrap the class inside of a conditional or exclude the plugin at part of your build process.</p>
+</blockquote>
+<h2>2. Create a visual breakpoint separator</h2>
+<p>This is definitely one that you can start implementing in your project. Have you ever seen any class lists like this?</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">h1</span><span style="color: #24292F"> </span><span style="color: #0550AE">class</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;text-xl text-gray-500 focus:text-gray-800 hover:text-gray-800 mb-1 sm:text-2xl sm:mb-2 md:text-3xl md:mb-4 xl:text-5xl&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<p>These can get rather large, rather quickly. As they get larger and more breakpoint-specific classes come into play, it can get harder to see each breakpoints styles.</p>
+<p>One trick that I like to use is inserting a style-less / marker class between each breakpoints section.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">h1</span><span style="color: #24292F"> </span><span style="color: #0550AE">class</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;text-xl text-gray-500 focus:text-gray-800 hover:text-gray-800 mb-1 | sm:text-2xl sm:mb-2 | md:text-3xl md:mb-4 | xl:text-5xl&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<p>In this case, I'm using a single <code>|</code> as the marker for a new breakpoint. It gives each section some breathing room but also provides a visual indicator for where a new screen definition starts.</p>
+<blockquote>
+<p>You could use any valid CSS class here instead, but a <code>|</code> is very common for separating things in many contexts.</p>
+</blockquote>
+<h2>3. Give your text editor / IDE some Tailwind love</h2>
+<p>There are plenty of great extensions out there for improving your Tailwind development experience. Here are some of my favourites and ones I would highly recommend to any Tailwind developer.</p>
+<h3><a href="https://tailwindcss.com/docs/intellisense">Tailwind CSS Intellisense for VS Code</a></h3>
+<p>This is an official extension for Visual Studio Code and comes with some really, <em>really</em> neat features.</p>
+<ul>
+<li>Autocompletion for class names and CSS functions.</li>
+<li>Linting of your classes and CSS files.</li>
+<li>Syntax highlighting of custom Tailwind directives.</li>
+<li>Hover previews that show entire CSS definitions for CSS classes.</li>
+</ul>
+<p>I think it's great when a project develops a first-party extension for their own tool. It adds a certain degree of reliability and trust.</p>
+<h3><a href="https://marketplace.visualstudio.com/items?itemName=heybourn.headwind">Headwind</a></h3>
+<p>Headwind is a Tailwind class sorter extension for Visual Studio Code. The documentation states that <em>&quot;It enforces consistent ordering of classes by parsing your code and reprinting class tags to follow a given order&quot;</em>.</p>
+<p>I've been using this one for quite a while now and once you get used to the order, it can make finding a class in a long list much easier.</p>
+<blockquote>
+<p>If you're a PhpStorm user, you can get a <a href="https://plugins.jetbrains.com/plugin/13376-tailwind-formatter">Headwind port plugin here</a>.</p>
+</blockquote>
+
+    
+</body>
+</html>

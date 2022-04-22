@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>How to Schedule Artisan Commands from Your Laravel Package</h2>
+
+<p>Before you can run your command on the scheduler, you need to make sure you've actually registered the command with <code>artisan</code>.</p>
+<p>To do this, use the <code>$this-&gt;commands</code> method in your <code>ServiceProvider::boot</code> method.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">class</span><span style="color: #24292F"> </span><span style="color: #953800">MyPackageServiceProvider</span><span style="color: #24292F"> </span><span style="color: #CF222E">extends</span><span style="color: #24292F"> </span><span style="color: #0550AE">ServiceProvider</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">boot</span><span style="color: #24292F">()</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">commands</span><span style="color: #24292F">([</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #0550AE">Commands\MyAwesomeCommand</span><span style="color: #CF222E">::class</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">        ])</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>By doing this, you can now run your command using <code>php artisan my-awesome-command</code>.</p>
+<h2>Scheduling the command</h2>
+<p>Now that <code>artisan</code> is aware of your command, you can hook it up to Laravel's <code>Schedule</code> and run it as often as you need.</p>
+<p>Begin by calling <code>$this-&gt;app-&gt;afterResolving</code> in your <code>ServiceProvider::boot</code> method, passing through two arguments.</p>
+<p>The first argument should be the abstract that is being resolved. In this case, that will be <code>Illuminate\Console\Scheduling\Schedule</code>. The second argument should be a <code>Closure</code> that accepts the object in it's parameter list.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">Illuminate\Console\Scheduling\Schedule</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">class</span><span style="color: #24292F"> </span><span style="color: #953800">MyPackageServiceProvider</span><span style="color: #24292F"> </span><span style="color: #CF222E">extends</span><span style="color: #24292F"> </span><span style="color: #0550AE">ServiceProvider</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">boot</span><span style="color: #24292F">()</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">commands</span><span style="color: #24292F">([</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #0550AE">Commands\MyAwesomeCommand</span><span style="color: #CF222E">::class</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">        ])</span></span>
+<span class="line"><span style="color: #24292F">		  </span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">app</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">afterResolving</span><span style="color: #24292F">(</span><span style="color: #0550AE">Schedule</span><span style="color: #CF222E">::class</span><span style="color: #24292F">, </span><span style="color: #CF222E">function</span><span style="color: #24292F"> (</span><span style="color: #0550AE">Schedule</span><span style="color: #24292F"> $schedule) {</span></span>
+<span class="line"><span style="color: #24292F">            $schedule</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">command</span><span style="color: #24292F">(</span><span style="color: #0550AE">Commands\MyAwesomeCommand</span><span style="color: #CF222E">::class</span><span style="color: #24292F">)</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">everyMinute</span><span style="color: #24292F">();</span></span>
+<span class="line"><span style="color: #24292F">        });</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>Now when you run <code>php artisan schedule:run</code>, the <code>Closure</code> will be executed and <code>MyAwesomeCommand</code> will be added to the scheduler, running once every minute.</p>
+
+    
+</body>
+</html>

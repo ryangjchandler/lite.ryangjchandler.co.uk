@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>Generate an Array of Dates Using Carbon</h2>
+
+<p>When a customer at <a href="https://surewise.com">Surewise</a> wants to take out a new insurance policy, they can only take one out with a start date within the next thirty days.</p>
+<p>Date pickers are horrendnous with browser compatibility, given IE11 and Safari don't support them, so we instead choose to use a simple <code>&lt;select&gt;</code> element with the dates as <code>&lt;option&gt;</code> inside.</p>
+<p>Here's how you can generate an array of dates for a given period:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">Carbon\</span><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0550AE">CarbonPeriod</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0550AE">Carbon</span></span>
+<span class="line"><span style="color: #24292F">};</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #0550AE">CarbonPeriod</span><span style="color: #CF222E">::</span><span style="color: #8250DF">create</span><span style="color: #24292F">(</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0550AE">Carbon</span><span style="color: #CF222E">::</span><span style="color: #8250DF">now</span><span style="color: #24292F">(),</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0550AE">Carbon</span><span style="color: #CF222E">::</span><span style="color: #8250DF">now</span><span style="color: #24292F">()</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">addDays</span><span style="color: #24292F">(</span><span style="color: #0550AE">30</span><span style="color: #24292F">)</span></span>
+<span class="line"><span style="color: #24292F">);</span></span>
+<span class="line"></span></code></pre>
+<p>Calling this method will return an instance of <code>Carbon\CarbonPeriod</code> which has implements the  <code>Iterator</code> interface and can therefore be used inside of a <code>foreach</code> statement.</p>
+<p>When looping over the <code>CarbonPeriod</code> instance, the iteration variable will be an instance of <code>Carbon\Carbon</code>, so you can call all of the regular <code>format</code> and <code>toDateTimeString()</code> methods.</p>
+
+    
+</body>
+</html>

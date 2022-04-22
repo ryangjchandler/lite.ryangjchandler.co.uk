@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>All About Match Expressions</h2>
+
+<p>If you've not been keeping up-to-date with the latest PHP releases, you might have missed that PHP 8.0 introduced a new <code>match</code> expression.</p>
+<p>PHP isn't the first language to introduce the concept of a <code>match</code> expression. It has existed in programming languages for quite a while, for example Rust, Scala and more recently Python.</p>
+<p>Here's what a <code>match</code> expression looks like:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">match</span><span style="color: #24292F"> ($subject) {</span></span>
+<span class="line"><span style="color: #24292F">    [</span><span style="color: #0550AE">condition</span><span style="color: #24292F">] </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> [</span><span style="color: #0550AE">result</span><span style="color: #24292F">]</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>In it's current state <code>match</code> is a hyper-optimised <code>switch</code> statement.</p>
+<p>You can use it to conditionally evaluate an expression based on a <code>[condition]</code>.</p>
+<p>There are a few key differences between <code>match</code> and <code>switch</code> though:</p>
+<ol>
+<li>
+<code>match</code> uses strict comparisons. This means that an <code>int</code> subject can't match a <code>string</code> condition.</li>
+<li>
+<code>match</code> only evaluates one condition at a time, whereas <code>switch</code> evaluates all <code>case</code> conditions before calculating the result.</li>
+<li>
+<code>match</code> only allows single-line expressions to be used in the place of <code>[result]</code>, where as <code>switch</code> allows blocks of code to be executed for each <code>case</code>.</li>
+</ol>
+<p>Let's take a <code>switch</code> statement and convert it to a <code>match</code> expression.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">switch</span><span style="color: #24292F"> ($name) {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">case</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;Ryan&#39;</span><span style="color: #24292F">:</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #0550AE">echo</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;Hello, Ryan!&#39;</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">break</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">case</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;John&#39;</span><span style="color: #24292F">:</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #0550AE">echo</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;Hello, John! How are you?&#39;</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">break</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">default</span><span style="color: #24292F">:</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #0550AE">echo</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;Hello!&#39;</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>Here's the equivalent code written in the form a <code>match</code> expression:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #0550AE">echo</span><span style="color: #24292F"> </span><span style="color: #CF222E">match</span><span style="color: #24292F"> ($name) {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0A3069">&#39;Ryan&#39;</span><span style="color: #24292F"> </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;Hello, Ryan!&#39;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0A3069">&#39;John&#39;</span><span style="color: #24292F"> </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;Hello, John! How are you?&#39;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">default</span><span style="color: #24292F"> </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;Hello!&#39;</span></span>
+<span class="line"><span style="color: #24292F">};</span></span>
+<span class="line"></span></code></pre>
+<p>The <code>match</code> expression is definitely more concise.</p>
+<p>It's also an expression, meaning it returns a value. This is great as we can use it next to the <code>echo</code> statement directly. We don't need to write an <code>echo</code> for each <code>case</code> like we do for a <code>switch</code> statement.</p>
+<h2>Multiple conditions, one result</h2>
+<p>If we had a <code>switch</code> statement that had multiple <code>case</code>s executing the same block of code, we'd do something like this:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">switch</span><span style="color: #24292F"> ($name) {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">case</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;Ryan&#39;</span><span style="color: #24292F">:</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">case</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;John&#39;</span><span style="color: #24292F">:</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #0550AE">echo</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;Hello, Ryan or John!&#39;</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">break</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">default</span><span style="color: #24292F">:</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #0550AE">echo</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;Hello!&#39;</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>To achieve the same effect in a <code>match</code> expression, we can separate the <code>[condition]</code> expressions with commas:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #0550AE">echo</span><span style="color: #24292F"> </span><span style="color: #CF222E">match</span><span style="color: #24292F"> ($name) {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0A3069">&#39;Ryan&#39;</span><span style="color: #24292F">, </span><span style="color: #0A3069">&#39;John&#39;</span><span style="color: #24292F"> </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;Hello, Ryan or John!&#39;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">default</span><span style="color: #24292F"> </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;Hello!&#39;</span></span>
+<span class="line"><span style="color: #24292F">};</span></span>
+<span class="line"></span></code></pre>
+<h2>Generalised match statements</h2>
+<p>Imagine you have the following code:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">$age </span><span style="color: #CF222E">=</span><span style="color: #24292F"> (</span><span style="color: #CF222E">int</span><span style="color: #24292F">) $request</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">input</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;age&#39;</span><span style="color: #24292F">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">if</span><span style="color: #24292F"> ($age </span><span style="color: #CF222E">&lt;</span><span style="color: #24292F"> </span><span style="color: #0550AE">25</span><span style="color: #24292F">) {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">lessThanTwentyFive</span><span style="color: #24292F">();</span></span>
+<span class="line"><span style="color: #24292F">} </span><span style="color: #CF222E">elseif</span><span style="color: #24292F"> ($age </span><span style="color: #CF222E">&lt;</span><span style="color: #24292F"> </span><span style="color: #0550AE">50</span><span style="color: #24292F">) {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">lessThanFifty</span><span style="color: #24292F">();</span></span>
+<span class="line"><span style="color: #24292F">} </span><span style="color: #CF222E">elseif</span><span style="color: #24292F"> ($age </span><span style="color: #CF222E">&lt;</span><span style="color: #24292F"> </span><span style="color: #0550AE">75</span><span style="color: #24292F">) {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">lessThanSeventyFive</span><span style="color: #24292F">();</span></span>
+<span class="line"><span style="color: #24292F">} </span><span style="color: #CF222E">else</span><span style="color: #24292F"> {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">olderThanSeventyFive</span><span style="color: #24292F">();</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>Personally I find <code>elseif</code> statements hard to read. They make the code dense and hard to understand at a glance.</p>
+<p>Since we're using boolean values inside of the expression, we can actually convert this into a <code>match</code> expression:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">$age </span><span style="color: #CF222E">=</span><span style="color: #24292F"> (</span><span style="color: #CF222E">int</span><span style="color: #24292F">) $request</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">input</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;age&#39;</span><span style="color: #24292F">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #CF222E">match</span><span style="color: #24292F"> (</span><span style="color: #0550AE">true</span><span style="color: #24292F">) {</span></span>
+<span class="line"><span style="color: #24292F">    $age </span><span style="color: #CF222E">&lt;</span><span style="color: #24292F"> </span><span style="color: #0550AE">25</span><span style="color: #24292F"> </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">lessThanTwentyFive</span><span style="color: #24292F">(),</span></span>
+<span class="line"><span style="color: #24292F">    $age </span><span style="color: #CF222E">&lt;</span><span style="color: #24292F"> </span><span style="color: #0550AE">50</span><span style="color: #24292F"> </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">lessThanFifty</span><span style="color: #24292F">(),</span></span>
+<span class="line"><span style="color: #24292F">    $age </span><span style="color: #CF222E">&lt;</span><span style="color: #24292F"> </span><span style="color: #0550AE">75</span><span style="color: #24292F"> </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">lessThanSeventyFive</span><span style="color: #24292F">(),</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">default</span><span style="color: #24292F"> </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">oldThanSeventyFive</span><span style="color: #24292F">(),</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>Method and functions calls are expressions, so we can use those in the <code>[result]</code> part of the <code>match</code> expression.</p>
+<p><code>match</code> also returns a value so we can use it as the expression in a <code>return</code> statement.</p>
+<blockquote>
+<p>In the future, we could see the <code>(true)</code> part disappear with the <a href="https://wiki.php.net/rfc/short-match">&quot;short match&quot; RFC</a>.</p>
+</blockquote>
+<h2>Array pattern matching</h2>
+<p>Although PHP doesn't support complex pattern matching (<a href="https://wiki.php.net/rfc/pattern-matching">RFC</a>), you can actually do some light pattern matching when using a <code>match</code> expression with an <code>array</code>.</p>
+<p>Here's an example of how you might do something based on the values of an array:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #6E7781">// Pseudo-data that you might receive from the front-end.</span></span>
+<span class="line"><span style="color: #24292F">$options </span><span style="color: #CF222E">=</span><span style="color: #24292F"> [</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0A3069">&#39;monthly&#39;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0A3069">&#39;credit-card&#39;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">];</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">if</span><span style="color: #24292F"> ($options[</span><span style="color: #0550AE">0</span><span style="color: #24292F">] </span><span style="color: #CF222E">===</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;monthly&#39;</span><span style="color: #24292F"> </span><span style="color: #CF222E">&amp;&amp;</span><span style="color: #24292F"> $options[</span><span style="color: #0550AE">1</span><span style="color: #24292F">] </span><span style="color: #CF222E">===</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;direct-debit&#39;</span><span style="color: #24292F">) {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">setupDirectDebit</span><span style="color: #24292F">();</span></span>
+<span class="line"><span style="color: #24292F">} </span><span style="color: #CF222E">else</span><span style="color: #24292F"> </span><span style="color: #CF222E">if</span><span style="color: #24292F"> ($options[</span><span style="color: #0550AE">0</span><span style="color: #24292F">] </span><span style="color: #CF222E">===</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;yearly&#39;</span><span style="color: #24292F"> </span><span style="color: #CF222E">&amp;&amp;</span><span style="color: #24292F"> $options[</span><span style="color: #0550AE">1</span><span style="color: #24292F">] </span><span style="color: #CF222E">===</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;credit-card&#39;</span><span style="color: #24292F">) {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">takeYearlyCardPayment</span><span style="color: #24292F">();</span></span>
+<span class="line"><span style="color: #24292F">} </span><span style="color: #CF222E">else</span><span style="color: #24292F"> </span><span style="color: #CF222E">if</span><span style="color: #24292F"> ($options[</span><span style="color: #0550AE">0</span><span style="color: #24292F">] </span><span style="color: #CF222E">===</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;monthly&#39;</span><span style="color: #24292F"> </span><span style="color: #CF222E">&amp;&amp;</span><span style="color: #24292F"> $options[</span><span style="color: #0550AE">1</span><span style="color: #24292F">] </span><span style="color: #CF222E">===</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;credit-card&#39;</span><span style="color: #24292F"> {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">setupCardSubscription</span><span style="color: #24292F">();</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>Again, <code>else if</code> statements can be confusing. Maybe there's a better way to write this code using <code>match</code> expressions.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #6E7781">// Pseudo-data that you might receive from the front-end.</span></span>
+<span class="line"><span style="color: #24292F">$options </span><span style="color: #CF222E">=</span><span style="color: #24292F"> [</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0A3069">&#39;monthly&#39;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0A3069">&#39;credit-card&#39;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">];</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #CF222E">match</span><span style="color: #24292F"> ($options) {</span></span>
+<span class="line"><span style="color: #24292F">    [</span><span style="color: #0A3069">&#39;monthly&#39;</span><span style="color: #24292F">, </span><span style="color: #0A3069">&#39;direct-debit&#39;</span><span style="color: #24292F">] </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">setupDirectDebit</span><span style="color: #24292F">(),</span></span>
+<span class="line"><span style="color: #24292F">    [</span><span style="color: #0A3069">&#39;yearly&#39;</span><span style="color: #24292F">, </span><span style="color: #0A3069">&#39;credit-card&#39;</span><span style="color: #24292F">]   </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">takeYearlyCardPayment</span><span style="color: #24292F">(),</span></span>
+<span class="line"><span style="color: #24292F">    [</span><span style="color: #0A3069">&#39;monthly&#39;</span><span style="color: #24292F">, </span><span style="color: #0A3069">&#39;credit-card&#39;</span><span style="color: #24292F">]  </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">setupCardSubscription</span><span style="color: #24292F">(),</span></span>
+<span class="line"><span style="color: #24292F">};</span></span>
+<span class="line"></span></code></pre>
+<p>We can actually use the <code>match</code> expression to match an <em>exact</em> array pattern. This is super handy and something that is quite common in other languages like Rust where you would match some sort of tuple pattern.</p>
+<p>PHP doesn't have tuples, but arrays are close enough.</p>
+<h2>Beyond PHP 8.0</h2>
+<p>The <code>match</code> expression in its current state is good enough to replace simple <code>switch</code> statements, lookup tables and even some <code>if..else</code> statements.</p>
+<p>There are still some things that can be added to the <code>match</code> expression to make it even cooler though.</p>
+<h3>Code blocks</h3>
+<p><code>match</code> only support single-line expressions at the moment. You can't have multiple lines of code as the result of a <code>match</code> arm.</p>
+<p>This was part of the original RFC, but the syntax was hard to get right so it was removed.</p>
+<p>I'd love to see this added, perhaps with this syntax:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">match</span><span style="color: #24292F"> ($subject) {</span></span>
+<span class="line"><span style="color: #24292F">    [</span><span style="color: #0550AE">condition</span><span style="color: #24292F">] </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #6E7781">// Write multiple lines of code here.</span></span>
+<span class="line"><span style="color: #24292F">        </span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #6E7781">// Semi-colon is omitted from the last expression and is used as the return value of the block.</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #0A3069">&quot;Hello, world!&quot;</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>It's understandable why this syntax was difficult to get right. Using <code>return</code> to return a value from the block is a bit odd as that would typically return a value from the function.</p>
+<p>Omitting the semi-colon on the last line, creating an implicit return, is also strange as that behaviour doesn't exist anywhere else in the language.</p>
+<p>Introducing a new keyword could work, but it would be yet <em>another</em> keyword added to the language. PHP already has a tonne of reserved keywords.</p>
+<h3>Complex pattern matching</h3>
+<p>Pattern matching has already been discussed in <a href="https://wiki.php.net/rfc/pattern-matching">this draft RFC</a>.</p>
+<p>It's a fairly advanced feature and has lots of use-cases which makes getting the RFC right very difficult.</p>
+<p>Here's a simple example where we can check if an object matches a pattern based on the property values:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">class</span><span style="color: #24292F"> </span><span style="color: #953800">Vector</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #0550AE">__construct</span><span style="color: #24292F">(</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">int</span><span style="color: #24292F">|</span><span style="color: #CF222E">float</span><span style="color: #24292F"> $x,</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">int</span><span style="color: #24292F">|</span><span style="color: #CF222E">float</span><span style="color: #24292F"> $y</span></span>
+<span class="line"><span style="color: #24292F">    ) {}</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">$vector </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #CF222E">new</span><span style="color: #24292F"> </span><span style="color: #0550AE">Vector</span><span style="color: #24292F">(</span><span style="color: #0550AE">0</span><span style="color: #24292F">, </span><span style="color: #0550AE">1</span><span style="color: #24292F">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">$vector </span><span style="color: #0550AE">is</span><span style="color: #24292F"> </span><span style="color: #0550AE">Vector</span><span style="color: #24292F"> { </span><span style="color: #0550AE">x</span><span style="color: #24292F">: </span><span style="color: #0550AE">0</span><span style="color: #24292F">, </span><span style="color: #0550AE">y</span><span style="color: #24292F">: </span><span style="color: #0550AE">1</span><span style="color: #24292F"> }; </span><span style="color: #6E7781">// `true` </span></span>
+<span class="line"></span></code></pre>
+<p>The plan in the RFC is to introduce a new <code>is</code> keyword which would act as an &quot;infix operator&quot; (something that goes between 2 expressions).</p>
+<p>The part on the left would be the subject and the right would be the pattern.</p>
+<p>In this case, the pattern is checking if <code>$vector</code> is of the type <code>Vector</code> and if the property <code>$x === 0</code> and <code>$y === 1</code>.</p>
+<p>If we were to do this without the pattern matching, it'd look like this:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">$vector </span><span style="color: #CF222E">instanceof</span><span style="color: #24292F"> </span><span style="color: #0550AE">Vector</span><span style="color: #24292F"> </span><span style="color: #CF222E">&amp;&amp;</span><span style="color: #24292F"> $vector</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">x </span><span style="color: #CF222E">===</span><span style="color: #24292F"> </span><span style="color: #0550AE">0</span><span style="color: #24292F"> </span><span style="color: #CF222E">&amp;&amp;</span><span style="color: #24292F"> $vector</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">y </span><span style="color: #CF222E">===</span><span style="color: #24292F"> </span><span style="color: #0550AE">1</span><span style="color: #24292F">;</span></span>
+<span class="line"></span></code></pre>
+<p>It's very word-y. It's very verbose. Pattern matching is good.</p>
+<p>Perhaps we only want to check if the <code>$vector</code> object has an <code>$x</code> value of <code>1</code>. We can ignore the rest of the fields in the object using the <code>..</code> token.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">$vector </span><span style="color: #0550AE">is</span><span style="color: #24292F"> </span><span style="color: #0550AE">Vector</span><span style="color: #24292F"> { </span><span style="color: #0550AE">x</span><span style="color: #24292F">: </span><span style="color: #0550AE">1</span><span style="color: #24292F">, </span><span style="color: #CF222E">..</span><span style="color: #24292F"> }; </span></span>
+<span class="line"></span></code></pre>
+<p>Although this isn't part of the <a href="https://wiki.php.net/rfc/pattern-matching">RFC</a>, it's something that I absolutely love in Rust.</p>
+<p>If we took this pattern matching and paired it with a <code>match</code> expression, we'd end up with something like:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">$vector </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #CF222E">new</span><span style="color: #24292F"> </span><span style="color: #0550AE">Vector</span><span style="color: #24292F">(</span><span style="color: #0550AE">0</span><span style="color: #24292F">, </span><span style="color: #0550AE">1</span><span style="color: #24292F">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">match</span><span style="color: #24292F"> ($vector) {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0550AE">Vector</span><span style="color: #24292F"> { </span><span style="color: #0550AE">x</span><span style="color: #24292F">: </span><span style="color: #0550AE">0</span><span style="color: #24292F">, </span><span style="color: #0550AE">y</span><span style="color: #24292F">: </span><span style="color: #0550AE">1</span><span style="color: #24292F"> } </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> $vector</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">moveTo</span><span style="color: #24292F">(</span><span style="color: #0550AE">0</span><span style="color: #24292F">, </span><span style="color: #0550AE">2</span><span style="color: #24292F">),</span></span>
+<span class="line"><span style="color: #24292F">};</span></span>
+<span class="line"></span></code></pre>
+<p>The pattern moves into the <code>[condition]</code> spot and works exactly the same.</p>
+<p>Some languages, like Rust, take this a step further an allow you to &quot;bind&quot; particular parts of a pattern to a variable in the <code>match</code>'s scope.</p>
+<p>Here's what that might look like:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #0550AE">echo</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;Y co-ordinate: &#39;</span><span style="color: #24292F"> </span><span style="color: #CF222E">.</span><span style="color: #24292F"> </span><span style="color: #CF222E">match</span><span style="color: #24292F"> (</span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">getVector</span><span style="color: #24292F">()) {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0550AE">Vector</span><span style="color: #24292F"> { </span><span style="color: #0550AE">x</span><span style="color: #24292F">: </span><span style="color: #0550AE">0</span><span style="color: #24292F">, $y </span><span style="color: #CF222E">@</span><span style="color: #24292F"> </span><span style="color: #0550AE">y</span><span style="color: #24292F">: </span><span style="color: #0550AE">1</span><span style="color: #24292F"> } </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> $y,</span></span>
+<span class="line"><span style="color: #24292F">};</span></span>
+<span class="line"></span></code></pre>
+<p>Bit of a silly example but it shows the concept. We can bind a specific part of a pattern to a variable using an <code>@</code> token. We can then use the variable <code>$y</code> in the expression.</p>
+<h2>Sign off</h2>
+<p>There is definitely lots of room for new features when it comes to <code>match</code> expressions. Despite that, I still love them.</p>
+<p>I've been replacing <code>switch</code> statements, <code>if..else</code> statements and boring array-powered lookup tables with them since upgrading to PHP 8.0.</p>
+<p>If you haven't upgraded to PHP 8.0 yet, just do it. You're missing out on a lot of great stuff and PHP 8.1 is around the corner. Minimise your upgrade path!</p>
+
+    
+</body>
+</html>

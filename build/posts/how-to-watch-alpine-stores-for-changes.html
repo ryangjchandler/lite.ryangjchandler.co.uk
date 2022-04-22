@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>How to Watch Alpine Stores for Changes</h2>
+
+<p>With Alpine 2.x and Spruce, you could define a global store and also a watcher for a particular store property:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">Spruce.</span><span style="color: #8250DF">store</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;counter&#39;</span><span style="color: #24292F">, {</span></span>
+<span class="line"><span style="color: #24292F">    count: </span><span style="color: #0550AE">0</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">})</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">Spruce.</span><span style="color: #8250DF">watch</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;counter.count&#39;</span><span style="color: #24292F">, () </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #6E7781">// Do something here...</span></span>
+<span class="line"><span style="color: #24292F">})</span></span>
+<span class="line"></span></code></pre>
+<p>Anytime the <code>counter.count</code> property was updated, the callback would be called.</p>
+<p>With the introduction of <code>Alpine.store</code> in Alpine 3.x there is no longer a dedicated watch method for stores, but we can still get the same effect with <code>Alpine.effect</code> (no pun intended):</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">Alpine.</span><span style="color: #8250DF">store</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;counter&#39;</span><span style="color: #24292F">, {</span></span>
+<span class="line"><span style="color: #24292F">    count: </span><span style="color: #0550AE">0</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">})</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">Alpine.</span><span style="color: #8250DF">effect</span><span style="color: #24292F">(() </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">const</span><span style="color: #24292F"> </span><span style="color: #0550AE">count</span><span style="color: #24292F"> </span><span style="color: #CF222E">=</span><span style="color: #24292F"> Alpine.</span><span style="color: #8250DF">store</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;counter&#39;</span><span style="color: #24292F">).count;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #6E7781">// Now do something with `count`...</span></span>
+<span class="line"><span style="color: #24292F">})</span></span>
+<span class="line"></span></code></pre>
+<p>This works because Alpine will keep track of any dependencies / reactive properties we use inside of the callback and invoke it when any of them change.</p>
+<p>Keep in mind that Alpine will run this callback function <strong>atleast once</strong>, so make sure you check for your initial state and prevent anything from happening.</p>
+
+    
+</body>
+</html>

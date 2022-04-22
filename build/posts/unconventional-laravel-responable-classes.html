@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>Unconventional Laravel: Responsable classes</h2>
+
+<p>In your typical Laravel application, you're probably used to using Laravel's helper methods for returning responses.</p>
+<p>Those responses might also vary in type: you might have an HTML response, generated from a Blade view, or a JSON response if the route being hit is an API endpoint.</p>
+<p>Here's an example:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">class</span><span style="color: #24292F"> </span><span style="color: #953800">PostController</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">index</span><span style="color: #24292F">()</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #8250DF">view</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;posts.index&#39;</span><span style="color: #24292F">, [</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #0A3069">&#39;post&#39;</span><span style="color: #24292F"> </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> </span><span style="color: #0550AE">Post</span><span style="color: #CF222E">::</span><span style="color: #8250DF">published</span><span style="color: #24292F">()</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">get</span><span style="color: #24292F">(),</span></span>
+<span class="line"><span style="color: #24292F">        ]);</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>We're going to look at how a controller like this can grow within an application, as well as how we can expand on this concept and turn the code above into the code snippet below:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">class</span><span style="color: #24292F"> </span><span style="color: #953800">PostController</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">index</span><span style="color: #24292F">()</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        $posts </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0550AE">Post</span><span style="color: #CF222E">::</span><span style="color: #8250DF">published</span><span style="color: #24292F">()</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">get</span><span style="color: #24292F">();</span></span>
+<span class="line"><span style="color: #24292F">        </span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #CF222E">new</span><span style="color: #24292F"> </span><span style="color: #0550AE">PostIndexResponse</span><span style="color: #24292F">($posts);</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<h2>The basic idea</h2>
+<h3>Content negotiation</h3>
+<p>In some applications, it makes sense to have a single route for both your HTML responses, as well as your API responses.</p>
+<p>This technique is known as &quot;content negotiation&quot;. You check what sort of request is being made and send a specific type of response back, based on that request type.</p>
+<p>Take the example above. If I wanted to return some JSON when the request wants that type of content, I would do the following:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">class</span><span style="color: #24292F"> </span><span style="color: #953800">PostController</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">index</span><span style="color: #24292F">(</span><span style="color: #0550AE">Request</span><span style="color: #24292F"> $request)</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        $posts </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0550AE">Post</span><span style="color: #CF222E">::</span><span style="color: #8250DF">published</span><span style="color: #24292F">()</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">get</span><span style="color: #24292F">();</span></span>
+<span class="line"><span style="color: #24292F">        </span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">if</span><span style="color: #24292F"> ($request</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">wantsJson</span><span style="color: #24292F">()) {</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">return</span><span style="color: #24292F"> $posts;</span></span>
+<span class="line"><span style="color: #24292F">        }</span></span>
+<span class="line"><span style="color: #24292F">        </span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #8250DF">view</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;posts.index&#39;</span><span style="color: #24292F">, [</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #0A3069">&#39;post&#39;</span><span style="color: #24292F"> </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> $posts,</span></span>
+<span class="line"><span style="color: #24292F">        ]);</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>Thanks to Laravel's <code>Request::wantsJson()</code> method, you can easily check whether or not you need to return JSON or HTML in the response.</p>
+<p>For small scenarios like this, custom response classes won't benefit you much. There's only 2 different conditions that determine the type of response that needs to be returned.</p>
+<p>Let's use a hypothetical <code>Request::wantsRss()</code> method now.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">class</span><span style="color: #24292F"> </span><span style="color: #953800">PostController</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">index</span><span style="color: #24292F">(</span><span style="color: #0550AE">Request</span><span style="color: #24292F"> $request)</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        $posts </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0550AE">Post</span><span style="color: #CF222E">::</span><span style="color: #8250DF">published</span><span style="color: #24292F">()</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">get</span><span style="color: #24292F">();</span></span>
+<span class="line"><span style="color: #24292F">        </span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">if</span><span style="color: #24292F"> ($request</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">wantsRss</span><span style="color: #24292F">()) {</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0550AE">RssFeed</span><span style="color: #CF222E">::</span><span style="color: #8250DF">from</span><span style="color: #24292F">($posts)</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">create</span><span style="color: #24292F">();</span></span>
+<span class="line"><span style="color: #24292F">        }</span></span>
+<span class="line"><span style="color: #24292F">        </span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">if</span><span style="color: #24292F"> ($request</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">wantsJson</span><span style="color: #24292F">()) {</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">return</span><span style="color: #24292F"> $posts;</span></span>
+<span class="line"><span style="color: #24292F">        }</span></span>
+<span class="line"><span style="color: #24292F">        </span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #8250DF">view</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;posts.index&#39;</span><span style="color: #24292F">, [</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #0A3069">&#39;post&#39;</span><span style="color: #24292F"> </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> $posts,</span></span>
+<span class="line"><span style="color: #24292F">        ]);</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>As more and more of these different content types get added, the method will get more and more crowded. Let's try and tackle this with custom response classes.</p>
+<p>The first step to creating a custom response class is implementing the <code>Responsable</code> interface and moving some of our response logic into the <code>toResponse</code> method.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">class</span><span style="color: #24292F"> </span><span style="color: #953800">PostIndexResponse</span><span style="color: #24292F"> </span><span style="color: #CF222E">implements</span><span style="color: #24292F"> </span><span style="color: #0550AE">Responsable</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">toResponse</span><span style="color: #24292F">(</span><span style="color: #0550AE">Request</span><span style="color: #24292F"> $request)</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">if</span><span style="color: #24292F"> ($request</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">wantsRss</span><span style="color: #24292F">()) {</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0550AE">RssFeed</span><span style="color: #CF222E">::</span><span style="color: #8250DF">from</span><span style="color: #24292F">($posts)</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">create</span><span style="color: #24292F">();</span></span>
+<span class="line"><span style="color: #24292F">        }</span></span>
+<span class="line"><span style="color: #24292F">        </span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">if</span><span style="color: #24292F"> ($request</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">wantsJson</span><span style="color: #24292F">()) {</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">return</span><span style="color: #24292F"> $posts;</span></span>
+<span class="line"><span style="color: #24292F">        }</span></span>
+<span class="line"><span style="color: #24292F">        </span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #8250DF">view</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;posts.index&#39;</span><span style="color: #24292F">, [</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #0A3069">&#39;post&#39;</span><span style="color: #24292F"> </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> $posts,</span></span>
+<span class="line"><span style="color: #24292F">        ]);</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>First problem is that our <code>$posts</code> variable isn't here anymore. Thankfully, we can add a constructor the class and assign it to a property.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">class</span><span style="color: #24292F"> </span><span style="color: #953800">PostIndexResponse</span><span style="color: #24292F"> </span><span style="color: #CF222E">implements</span><span style="color: #24292F"> </span><span style="color: #0550AE">Responsable</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">private</span><span style="color: #24292F"> $posts;</span></span>
+<span class="line"><span style="color: #24292F">    </span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #0550AE">__construct</span><span style="color: #24292F">($posts)</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">posts </span><span style="color: #CF222E">=</span><span style="color: #24292F"> $posts;</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">    </span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">toResponse</span><span style="color: #24292F">(</span><span style="color: #0550AE">Request</span><span style="color: #24292F"> $request)</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #6E7781">// ...</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>If we head back to our controller, we can replace all of those <code>if</code> statements with a single instantiation of our new <code>PostIndexResponse</code> class.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">class</span><span style="color: #24292F"> </span><span style="color: #953800">PostController</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">index</span><span style="color: #24292F">(</span><span style="color: #0550AE">Request</span><span style="color: #24292F"> $request)</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        $posts </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0550AE">Post</span><span style="color: #CF222E">::</span><span style="color: #8250DF">published</span><span style="color: #24292F">()</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">get</span><span style="color: #24292F">();</span></span>
+<span class="line"><span style="color: #24292F">        </span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #CF222E">new</span><span style="color: #24292F"> </span><span style="color: #0550AE">PostIndexResponse</span><span style="color: #24292F">($posts);</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<h2>Creating a base response class</h2>
+<p>The logic that we've just abstracted into a separate class is still a bit long and tedious to write out every time.</p>
+<p>One way of working around this is by creating an abstract <code>BaseResponse</code> class that holds this logic instead.</p>
+<p>Here's a super simple version:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">abstract</span><span style="color: #24292F"> </span><span style="color: #CF222E">class</span><span style="color: #24292F"> </span><span style="color: #953800">BaseResponse</span><span style="color: #24292F"> </span><span style="color: #CF222E">implements</span><span style="color: #24292F"> </span><span style="color: #0550AE">Responsable</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">toResponse</span><span style="color: #24292F">($request)</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">if</span><span style="color: #24292F"> ($request</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">wantsJson</span><span style="color: #24292F">()) {</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">toJson</span><span style="color: #24292F">();</span></span>
+<span class="line"><span style="color: #24292F">        }</span></span>
+<span class="line"><span style="color: #24292F">        </span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">toHtml</span><span style="color: #24292F">();</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>The logic is similar to the previous class, but now we're going to use some conventional method naming.</p>
+<p>For requests that are expecting a JSON response, the <code>toJson</code> method should be used on the child class. By default, it will use the <code>toHtml</code> method, so you could return a view from here or an instance of <code>HtmlString</code>.</p>
+<p>Let's take this new abstract class and apply it to our <code>PostIndexResponse</code>.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">class</span><span style="color: #24292F"> </span><span style="color: #953800">PostIndexResponse</span><span style="color: #24292F"> </span><span style="color: #CF222E">extends</span><span style="color: #24292F"> </span><span style="color: #0550AE">BaseResponse</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">private</span><span style="color: #24292F"> $posts;</span></span>
+<span class="line"><span style="color: #24292F">    </span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #0550AE">__construct</span><span style="color: #24292F">($posts)</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">posts </span><span style="color: #CF222E">=</span><span style="color: #24292F"> $posts;</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">    </span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">toRss</span><span style="color: #24292F">()</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0550AE">RssFeed</span><span style="color: #CF222E">::</span><span style="color: #8250DF">from</span><span style="color: #24292F">(</span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">posts)</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">create</span><span style="color: #24292F">();</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">    </span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">toJson</span><span style="color: #24292F">()</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">posts;</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">    </span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">toHtml</span><span style="color: #24292F">()</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #8250DF">view</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;posts.index&#39;</span><span style="color: #24292F">, [</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #0A3069">&#39;posts&#39;</span><span style="color: #24292F"> </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">posts,</span></span>
+<span class="line"><span style="color: #24292F">        ]);</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<h3>Adding some magic</h3>
+<p>If I wanted to add a new <code>wantsPng</code> condition to my <code>BaseResponse</code> class, I'd need to go into the <code>toResponse</code> method, check for it, add in a new method. This is tedious when you're using lots of different content types, so why don't we add a bit of magic to it.</p>
+<p>I'm going to go down the route of assuming there is always a <code>wants{format}</code> method on the request object. This is probably going to be the case, especially if you're using the check in other places in your app, you'd probably want to macro it in.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">abstract</span><span style="color: #24292F"> </span><span style="color: #CF222E">class</span><span style="color: #24292F"> </span><span style="color: #953800">BaseResponse</span><span style="color: #24292F"> </span><span style="color: #CF222E">implements</span><span style="color: #24292F"> </span><span style="color: #0550AE">Responsable</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">protected</span><span style="color: #24292F"> $accepts </span><span style="color: #CF222E">=</span><span style="color: #24292F"> [</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #0A3069">&#39;json&#39;</span><span style="color: #24292F">, </span><span style="color: #0A3069">&#39;rss&#39;</span><span style="color: #24292F">, </span><span style="color: #0A3069">&#39;png&#39;</span><span style="color: #24292F">, </span><span style="color: #0A3069">&#39;jpg&#39;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">    ];</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">toResponse</span><span style="color: #24292F">($request)</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">foreach</span><span style="color: #24292F"> (</span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">accepts </span><span style="color: #CF222E">as</span><span style="color: #24292F"> $accept) {</span></span>
+<span class="line"><span style="color: #24292F">            $requestMethod </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;wants&#39;</span><span style="color: #CF222E">.</span><span style="color: #0550AE">Str</span><span style="color: #CF222E">::</span><span style="color: #8250DF">studly</span><span style="color: #24292F">($accept);</span></span>
+<span class="line"><span style="color: #24292F">            $responseMethod </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;to&#39;</span><span style="color: #CF222E">.</span><span style="color: #0550AE">Str</span><span style="color: #CF222E">::</span><span style="color: #8250DF">studly</span><span style="color: #24292F">($accept);</span></span>
+<span class="line"><span style="color: #24292F">          </span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">if</span><span style="color: #24292F"> ($request</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">{$requestMethod}()) {</span></span>
+<span class="line"><span style="color: #24292F">                </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">{$responseMethod}();</span></span>
+<span class="line"><span style="color: #24292F">            }</span></span>
+<span class="line"><span style="color: #24292F">        }</span></span>
+<span class="line"><span style="color: #24292F">      </span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">toHtml</span><span style="color: #24292F">();</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>Now, instead of needing to write the condition yourself, you can simply add a new item to the <code>$accepts</code> property, define a <code>to{format}</code> method using <em>StudlyCase</em> and it should &quot;just work&quot;.</p>
+<h2>Pros</h2>
+<h3>Thin controllers</h3>
+<p>One of the Laravel community's many &quot;best practices&quot; is to always have thin controllers. This just means that your controllers are always lightweight and small, resulting in a lot of logic being moved outside into models and actions, or in this case, custom response classes.</p>
+<p>This best practice also helps with naming things, since each method or class will be appropriately named for what it does. Custom response classes have the same effect.</p>
+<h3>Code clarity</h3>
+<p>If this is a pattern that you adopt and use across your codebase, you'll probably find that finding things becomes a lot easier. The same idea can be found in single action controllers and form requests.</p>
+<p>If you know the name of the current route / context, or can describe what you're viewing, as long as your custom response classes are named appropriately, you can do a quick search and find exactly what you're looking for.</p>
+<h2>Cons</h2>
+<h3>Hidden logic</h3>
+<p>Despite me saying that code clarity is a <em>pro</em> for this pattern, you could also be making an early abstraction, meaning your logic and request flow is hidden away under a named object.</p>
+<p>For small projects, that can be problematic, especially if you're not working on them 24/7 and know the structure like the back of your hand.</p>
+<p>It can also be problematic for new developers on a project, since it's not conventional. But hey, that's what these posts are all about.</p>
+<h3>Maintenance of accepted types</h3>
+<p>Like I've shown, you can use a bit of magic to make the maintenance of this pattern a bit easier, but if you find yourself adding 100 different content types because you have 100 different contexts, you're probably using the wrong pattern.</p>
+<p>With each type you add, you need to remember how it works, what should happen with the response and where that magic is even coming from.</p>
+<h3>Unexpected errors</h3>
+<p>If somebody makes a request to your route asking for an unexpected content type, your code probably won't have any support for it. That means the user is going to get a nasty 500 error and you're going to be sitting there debugging the problem. Even worse, depending on your default response type, you could even leak data because it will always return JSON, or HTML.</p>
+<p>Be sure to protect your routes correctly, or tighten up the base response class to return an empty response by default instead.</p>
+<h2>Sign off</h2>
+<p>If you enjoyed this article or have any questions, I'd love to know on <a href="https://twitter.com/ryangjchandler">Twitter</a>. I'd also love to know if you have used this pattern in your own applications.</p>
+<p>Thanks for reading!</p>
+
+    
+</body>
+</html>

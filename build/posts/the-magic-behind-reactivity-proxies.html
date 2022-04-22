@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>The Magic Behind Reactivity - Proxies</h2>
+
+<p>In this short series of blog posts, I'm going to be showing you how reactive JavaScript frameworks such as <a href="https://alpinejs.dev">Alpine.js</a> and <a href="https://vuejs.org/">Vue.js</a> work under the hood.</p>
+<p>We'll begin by understanding the <code>Proxy</code> object in JavaScript and create our own budget version of <code>Alpine.reactive()</code>.</p>
+<h2>What is <code>Proxy</code>?</h2>
+<p>The <code>Proxy</code> object was introduced as part of the ES2015 specification. It allows you to intercept the basic operations on an object, for example retrieving a property, setting a property or deleting a property.</p>
+<p>You're able to define your own callbacks / handlers for these operations. This is similar to how PHP's <code>__get</code> and <code>__set</code> magic methods work.</p>
+<p>You receive the target object, the name of the property being accessed and when setting, the value that's being assigned.</p>
+<p>Here's an example:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">const</span><span style="color: #24292F"> </span><span style="color: #0550AE">proxy</span><span style="color: #24292F"> </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #CF222E">new</span><span style="color: #24292F"> </span><span style="color: #0550AE">Proxy</span><span style="color: #24292F">(</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        count: </span><span style="color: #0550AE">0</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">    },</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #8250DF">get</span><span style="color: #24292F">(</span><span style="color: #953800">target</span><span style="color: #24292F">, </span><span style="color: #953800">property</span><span style="color: #24292F">) {</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">return</span><span style="color: #24292F"> target[property];</span></span>
+<span class="line"><span style="color: #24292F">        },</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #8250DF">set</span><span style="color: #24292F">(</span><span style="color: #953800">target</span><span style="color: #24292F">, </span><span style="color: #953800">property</span><span style="color: #24292F">, </span><span style="color: #953800">value</span><span style="color: #24292F">) {</span></span>
+<span class="line"><span style="color: #24292F">            target[property] </span><span style="color: #CF222E">=</span><span style="color: #24292F"> value;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0550AE">true</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">        },</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">);</span></span>
+<span class="line"></span></code></pre>
+<p>The code above shows a very basic <code>Proxy</code> handler. The behaviour implemented inside of the <code>get</code> and <code>set</code> methods isn't anything special, it's just returning the <code>property</code> from <code>target</code> and setting it to <code>value</code>. It's really just a regular object.</p>
+<p>If we wanted to get fancy, we could put a <code>console.log</code> inside of the <code>get()</code> handler.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">const</span><span style="color: #24292F"> </span><span style="color: #0550AE">proxy</span><span style="color: #24292F"> </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #CF222E">new</span><span style="color: #24292F"> </span><span style="color: #0550AE">Proxy</span><span style="color: #24292F">(</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        count: </span><span style="color: #0550AE">0</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">    },</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #8250DF">get</span><span style="color: #24292F">(</span><span style="color: #953800">target</span><span style="color: #24292F">, </span><span style="color: #953800">property</span><span style="color: #24292F">) {</span></span>
+<span class="line"><span style="color: #24292F">            console.</span><span style="color: #8250DF">log</span><span style="color: #24292F">(</span><span style="color: #0A3069">`Trying to access ${</span><span style="color: #24292F">property</span><span style="color: #0A3069">}.`</span><span style="color: #24292F">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">return</span><span style="color: #24292F"> target[property];</span></span>
+<span class="line"><span style="color: #24292F">        },</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">proxy.count;</span></span>
+<span class="line"></span></code></pre>
+<p>When the <code>proxy.count</code> expression is evaluated, the <code>console.log</code> will be called and appear in your console.</p>
+<p>One thing that confuses people a lot about <code>Proxy</code> is that it <strong>doesn't</strong> change how you interact with the underlying value.</p>
+<p>If you wrap an <code>Array</code> in a <code>Proxy</code>, you can still do <code>myWrappedArray.push</code> or <code>myWrappedArray.filter</code>.</p>
+<h2>Creating a function</h2>
+<p>Now that we know what a <code>Proxy</code> is, let's create a new function:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">reactive</span><span style="color: #24292F">(</span><span style="color: #953800">object</span><span style="color: #24292F">) {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #CF222E">new</span><span style="color: #24292F"> </span><span style="color: #0550AE">Proxy</span><span style="color: #24292F">(object, {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #8250DF">get</span><span style="color: #24292F">(</span><span style="color: #953800">target</span><span style="color: #24292F">, </span><span style="color: #953800">property</span><span style="color: #24292F">) {</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">return</span><span style="color: #24292F"> target[property];</span></span>
+<span class="line"><span style="color: #24292F">        },</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #8250DF">set</span><span style="color: #24292F">(</span><span style="color: #953800">target</span><span style="color: #24292F">, </span><span style="color: #953800">property</span><span style="color: #24292F">, </span><span style="color: #953800">value</span><span style="color: #24292F">) {</span></span>
+<span class="line"><span style="color: #24292F">            target[property] </span><span style="color: #CF222E">=</span><span style="color: #24292F"> value;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0550AE">true</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">        },</span></span>
+<span class="line"><span style="color: #24292F">    });</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>One thing that we haven't covered in this function is nested <code>Proxy</code> instances. Imagine the following scenario:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">const</span><span style="color: #24292F"> </span><span style="color: #0550AE">user</span><span style="color: #24292F"> </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #8250DF">reactive</span><span style="color: #24292F">({</span></span>
+<span class="line"><span style="color: #24292F">    name: </span><span style="color: #0A3069">&#39;Ryan&#39;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">    address: {</span></span>
+<span class="line"><span style="color: #24292F">        postcode: </span><span style="color: #0A3069">&#39;TT1 1TT&#39;</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">})</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #6E7781">// How do we intercept this!?</span></span>
+<span class="line"><span style="color: #24292F">user.address.postcode </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;TT2 2TT&#39;</span><span style="color: #24292F">;</span></span>
+<span class="line"></span></code></pre>
+<p>When we update <code>user.address.postcode</code>, the <code>set</code> handler in our <code>Proxy</code> won't be called as the <code>address</code> object inside of <code>user</code> isn't reactive.</p>
+<p>Don't worry, this is easy to fix. We can recursively call <code>reactive</code> for each of the properties on our original <code>object</code> when they're <code>typeof</code> is <code>object</code>.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">reactive</span><span style="color: #24292F">(</span><span style="color: #953800">object</span><span style="color: #24292F">) {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">if</span><span style="color: #24292F"> (object </span><span style="color: #CF222E">===</span><span style="color: #24292F"> </span><span style="color: #0550AE">null</span><span style="color: #24292F"> </span><span style="color: #CF222E">||</span><span style="color: #24292F"> </span><span style="color: #CF222E">typeof</span><span style="color: #24292F"> object </span><span style="color: #CF222E">!==</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;object&#39;</span><span style="color: #24292F">) {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">return</span><span style="color: #24292F"> object;</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">for</span><span style="color: #24292F"> (</span><span style="color: #CF222E">const</span><span style="color: #24292F"> </span><span style="color: #0550AE">property</span><span style="color: #24292F"> </span><span style="color: #CF222E">in</span><span style="color: #24292F"> object) {</span></span>
+<span class="line"><span style="color: #24292F">        object[property] </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #8250DF">reactive</span><span style="color: #24292F">(object[property])</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #CF222E">new</span><span style="color: #24292F"> </span><span style="color: #0550AE">Proxy</span><span style="color: #24292F">(object, {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #8250DF">get</span><span style="color: #24292F">(</span><span style="color: #953800">target</span><span style="color: #24292F">, </span><span style="color: #953800">property</span><span style="color: #24292F">) {</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">return</span><span style="color: #24292F"> target[property];</span></span>
+<span class="line"><span style="color: #24292F">        },</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #8250DF">set</span><span style="color: #24292F">(</span><span style="color: #953800">target</span><span style="color: #24292F">, </span><span style="color: #953800">property</span><span style="color: #24292F">, </span><span style="color: #953800">value</span><span style="color: #24292F">) {</span></span>
+<span class="line"><span style="color: #24292F">            target[property] </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #8250DF">reactive</span><span style="color: #24292F">(value);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0550AE">true</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">        },</span></span>
+<span class="line"><span style="color: #24292F">    });</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>Voila! When the <code>object</code> passed into <code>reactive</code> has any nested objects, they will also be passed through <code>reactive</code> recursively.</p>
+<p>When we <code>set</code> the value of a property, we'll also pass the <code>value</code> through <code>reactive</code> to ensure that any objects are wrapped in a <code>Proxy</code> too.</p>
+<h2>Wrapping up</h2>
+<p>And with that, we've created a semi-functional version of <code>Alpine.reactive()</code>. The only thing that our <code>reactive</code> function doesn't do yet is update or trigger any function calls.</p>
+<p>We'll look at creating a basic version of <code>Alpine.effect()</code> in the next instalment.</p>
+<p>Until then, thank you for reading and I'll catch you next time!</p>
+
+    
+</body>
+</html>

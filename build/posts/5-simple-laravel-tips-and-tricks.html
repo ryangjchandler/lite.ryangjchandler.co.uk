@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>5 Simple Laravel Tips and Tricks</h2>
+
+<h2>1. Chained <code>dd</code> and <code>dump</code></h2>
+<p>Have you ever written a block of code like this?</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">$users </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0550AE">User</span><span style="color: #CF222E">::</span><span style="color: #8250DF">all</span><span style="color: #24292F">();</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #8250DF">dd</span><span style="color: #24292F">($users);</span></span>
+<span class="line"></span></code></pre>
+<p>It's not awful, but it is annoying that you <em>need</em> to assign the result of <code>User::all()</code> (an instance of <code>Collection</code>) to a variable just to dump and die. Turns out, you don't actually <em>need</em> to. Instead, you can use the <code>dd</code> or <code>dump</code> method on the <code>Collection</code> class instead and turn this into a one-liner.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #0550AE">User</span><span style="color: #CF222E">::</span><span style="color: #8250DF">all</span><span style="color: #24292F">()</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">dd</span><span style="color: #24292F">();</span></span>
+<span class="line"></span></code></pre>
+<h2>2. <code>Auth::id()</code></h2>
+<p>I wrote a tweet about this one a little while ago and it seemed like a lot of people didn't know about it.</p>
+<blockquote>
+<p>🔥 I still see so many people retrieving the current user's ID as shown at the top of the image. Take a shortcut and use the <code>Auth::id()</code> method instead! <a href="https://t.co/P7eB1PJrt2">https://t.co/P7eB1PJrt2</a></p>
+<p><a href="https://twitter.com/ryangjchandler/status/1286316647385636864/photo/1"><img src="https://pbs.twimg.com/media/EdnqD4AXoAIcrx3.png?name=thumb" alt="" /></a></p>
+<p>— Ryan Chandler (<a href="https://twitter.com/ryangjchandler">@ryangjchandler</a>) <a href="https://twitter.com/ryangjchandler/status/1286316647385636864">Jul 23, 2020</a></p>
+</blockquote>
+<p>I think my favourite thing about using this method is that you don't need to worry about accessing the <code>id</code> property on a <code>null</code> object, you can just use <code>Auth::id()</code> and it will return <code>null</code> when the user is logged out.</p>
+<h2>3. Default Relationship Models</h2>
+<p>Laravel provides a handy <code>withDefault()</code> method on the <code>belongsTo</code> relationship that will return a model object even when the relationship doesn't actually exist.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">class</span><span style="color: #24292F"> </span><span style="color: #953800">Post</span><span style="color: #24292F"> </span><span style="color: #CF222E">extends</span><span style="color: #24292F"> </span><span style="color: #0550AE">Model</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">user</span><span style="color: #24292F">()</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">belongsTo</span><span style="color: #24292F">(</span><span style="color: #0550AE">User</span><span style="color: #CF222E">::class</span><span style="color: #24292F">)</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">withDefault</span><span style="color: #24292F">();</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>Now, if we try to access the <code>$post-&gt;user</code> relationship, we'll still get a <code>User</code> object even when it does exist in the database. This is known as the &quot;null object&quot; pattern and helps eliminate some of those <code>if ($post-&gt;user)</code> conditional statements.</p>
+<p>There's a few different things you can do with <code>withDefault()</code>, you can read more about it <a href="https://laravel.com/docs/8.x/eloquent-relationships#default-models">here in the documentation</a>.</p>
+<h2>4. Custom Blade Directives</h2>
+<p>I don't use custom Blade directives all too often, but when I do it definitely makes my views look nicer. One example of a Blade directive that I use across multiple projects is <code>@nl2br</code></p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">h3</span><span style="color: #24292F">&gt;Notes&lt;/</span><span style="color: #116329">h3</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">@foreach</span><span style="color: #24292F">($notes </span><span style="color: #CF222E">as</span><span style="color: #24292F"> $note)</span></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">p</span><span style="color: #24292F">&gt;</span><span style="color: #8250DF">@nl2br</span><span style="color: #24292F">($note</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">content)&lt;/</span><span style="color: #116329">p</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #CF222E">@endforeach</span></span>
+<span class="line"></span></code></pre>
+<p>Creating your own Blade directive really isn't difficult. Here's what the <code>@nl2br</code> one looks like:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #0550AE">Blade</span><span style="color: #CF222E">::</span><span style="color: #8250DF">directive</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;nl2br&#39;</span><span style="color: #24292F">, </span><span style="color: #CF222E">function</span><span style="color: #24292F"> ($expression) {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #0A3069">&quot;&lt;?php echo nl2br(e({</span><span style="color: #24292F">$expression</span><span style="color: #0A3069">})) ?&gt;&quot;</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">});</span></span>
+<span class="line"></span></code></pre>
+<p>Under the hood, Blade transforms a Blade directive into a PHP string (or expression). In this case, we're writing the PHP code necessary to print out the result of <code>nl2br</code>.</p>
+<p>The callback function accepts an <code>$expression</code> argument. This is what was passed to the directive as arguments. In the example above, that would be <code>$note-&gt;content</code> as a string.</p>
+<p>That confuses people quite a bit, because they expect <code>$expression</code> to be the return value of <code>$note-&gt;content</code>, when in fact is it a literal string with the contents <code>$note-&gt;content</code>:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">$expression </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;$note-&gt;content&#39;</span><span style="color: #24292F">;</span></span>
+<span class="line"></span></code></pre>
+<h2>5. Better Intellisense</h2>
+<p>This isn't something related to your code directly, but it can definitely make it faster to write.</p>
+<h3>PhpStorm</h3>
+<p>If you're one of the PhpStorm crowd, you've probably already got the Laravel extension installed. If you're looking for something a little more powerful, and premium, you should definitely check out <a href="https://plugins.jetbrains.com/plugin/13441-laravel-idea">LaravelIdea</a>.</p>
+<p>This extension provides auto-complete for basically everything cool and awesome in Laravel. View names, config names, Blade component tags and more.</p>
+<h3>Visual Studio Code</h3>
+<p>I've been using <a href="https://marketplace.visualstudio.com/items?itemName=amiralizadeh9480.laravel-extra-intellisense">Laravel Extra Intellisense</a> for a little while now and it has definitely given me a speed boost when it comes to getting the right view, configuration value or route name.</p>
+<p>It's free, pretty powerful and feels just like any other intellisense plugin.</p>
+
+    
+</body>
+</html>

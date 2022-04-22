@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>Flashing Banner Messages in Your Laravel Jetstream and Livewire Applications</h2>
+
+<blockquote>
+<p>This article assumes you've already got a <a href="https://jetstream.laravel.com/">Laravel Jetstream</a> application setup and that you are using the <a href="https://laravel-livewire.com">Livewire</a> stack. If you haven't, read the official documentation on <a href="https://jetstream.laravel.com/2.x/installation.html">how to get started</a>.</p>
+</blockquote>
+<h2>The <code>&lt;x-jet-banner&gt;</code> component</h2>
+<p>Jetstream comes jam-packed with lots of goodies. One of those goodies is an <code>&lt;x-jet-banner&gt;</code> component. If you're using the default <code>layouts.app</code> layout that comes with Jetstream, you might have already seen this. It can be found at the very start of the <code>&lt;body&gt;</code> tag:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">body</span><span style="color: #24292F"> </span><span style="color: #0550AE">class</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;font-sans antialiased&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">x-jet-banner</span><span style="color: #24292F"> /&gt;</span></span>
+<span class="line"></span></code></pre>
+<p>If you're using a different layout file, go ahead and include this Blade component somewhere in your markup.</p>
+<p>A brief look at the component itself shows that it's powered by Alpine and support 2 different styles out of the box. A <strong>success</strong> style, as well as an <strong>error/danger</strong> style.</p>
+<p>This is perfect for 99% of applications since you either want to say something is good or bad.</p>
+<p>You might also notice that there is an <code>@props</code> declaration at the top of the component file:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">@props</span><span style="color: #24292F">([</span><span style="color: #0A3069">&#39;style&#39;</span><span style="color: #24292F"> </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> </span><span style="color: #8250DF">session</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;flash.bannerStyle&#39;</span><span style="color: #24292F">, </span><span style="color: #0A3069">&#39;success&#39;</span><span style="color: #24292F">), </span><span style="color: #0A3069">&#39;message&#39;</span><span style="color: #24292F"> </span><span style="color: #CF222E">=&gt;</span><span style="color: #24292F"> </span><span style="color: #8250DF">session</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;flash.banner&#39;</span><span style="color: #24292F">)])</span></span>
+<span class="line"></span></code></pre>
+<p>This is where the component gets all of the information for what type of banner should be shown as well as the message.</p>
+<h2>Flashing a message</h2>
+<p>Since we know the component is looking for the message and style in the session, all we need to do is flash these pieces of information to the session.</p>
+<p>In a Livewire component, you might use the <code>session()</code> helper or go through the <code>request()</code> helper instead.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">banner</span><span style="color: #24292F">(</span><span style="color: #CF222E">string</span><span style="color: #24292F"> $message, </span><span style="color: #CF222E">string</span><span style="color: #24292F"> $style </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;success&#39;</span><span style="color: #24292F">)</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #8250DF">request</span><span style="color: #24292F">()</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">session</span><span style="color: #24292F">()</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">flash</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;flash.banner&#39;</span><span style="color: #24292F">, $message);</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #8250DF">request</span><span style="color: #24292F">()</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">session</span><span style="color: #24292F">()</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">flash</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;flash.bannerStyle&#39;</span><span style="color: #24292F">, $style);</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>Add this method to your component and use it yourself!</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">save</span><span style="color: #24292F">()</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #6E7781">// Some save logic goes here, I guess.</span></span>
+<span class="line"><span style="color: #24292F">  </span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0550AE">$this</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">banner</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;Successfully saved!&#39;</span><span style="color: #24292F">);</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<h2>A reusable trait</h2>
+<p>If you want to re-use this throughout multiple components, you might wish to extract the method into a <code>trait</code> that can be used on your components.</p>
+<p>Here's the one I use.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">namespace</span><span style="color: #24292F"> </span><span style="color: #953800">App\Support\Concerns</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">trait</span><span style="color: #24292F"> </span><span style="color: #953800">InteractsWithBanner</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">public</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> </span><span style="color: #8250DF">banner</span><span style="color: #24292F">(</span><span style="color: #CF222E">string</span><span style="color: #24292F"> $message, </span><span style="color: #CF222E">string</span><span style="color: #24292F"> $style </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0A3069">&#39;success&#39;</span><span style="color: #24292F">)</span></span>
+<span class="line"><span style="color: #24292F">    {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #8250DF">request</span><span style="color: #24292F">()</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">session</span><span style="color: #24292F">()</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">flash</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;flash.banner&#39;</span><span style="color: #24292F">, $message);</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #8250DF">request</span><span style="color: #24292F">()</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">session</span><span style="color: #24292F">()</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">flash</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;flash.bannerStyle&#39;</span><span style="color: #24292F">, $style);</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<blockquote>
+<p>For these sort of traits, I don't put them inside of the <code>App/Http/Livewire</code> folder because they're not reliant on Livewire specific methods. I could add this to anything in my application and it would still do the same thing.</p>
+</blockquote>
+<p>Now you can use this trait in your Livewire component instead:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">App\Support\Concerns\InteractsWithBanner</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #CF222E">class</span><span style="color: #24292F"> </span><span style="color: #953800">SaveForm</span><span style="color: #24292F"> </span><span style="color: #CF222E">extends</span><span style="color: #24292F"> </span><span style="color: #0550AE">Component</span></span>
+<span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">InteractsWithBanner</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+
+    
+</body>
+</html>

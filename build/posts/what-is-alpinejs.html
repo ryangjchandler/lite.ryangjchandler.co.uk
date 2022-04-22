@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>What is Alpine.js?</h2>
+
+<p>If you're a part of the Laravel community, you've probably already heard of Alpine. It's a minimalistic JavaScript framework that ditches the virtual DOM in favour of raw DOM updates and operations. The documentation says to <em>Think of it like <a href="https://tailwindcss.com/">Tailwind</a> for JavaScript.</em></p>
+<p>Syntactically, it's inspired by Vue. This isn't a problem because Vue has the most beginner friendly and natural syntax in my opinion.</p>
+<p>Let me show you where it all starts:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">div</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-data</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;{}&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">span</span><span style="color: #24292F">&gt;Sweet, sweet content.&lt;/</span><span style="color: #116329">span</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">&lt;/</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<p>Everything in Alpine begins with a custom attribute, <code>x-data</code>. If you come from the Vue world, this is essentially the <code>data</code> property on one of your components. Alpine will search through your DOM, find all of the elements with this attribute and set them up for some sweet vanilla reactivity.</p>
+<h2>What can I put in this attribute?</h2>
+<p>That's a good question. In the same way as your Vue component data, the <code>x-data</code> attribute should contain a JavaScript object, something like this:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">div</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-data</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;{ foo: &#39;bar&#39; }&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">span</span><span style="color: #24292F">&gt;Sweet, sweet content.&lt;/</span><span style="color: #116329">span</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">&lt;/</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<p>When the DOM is scanned, Alpine will take this <code>x-data</code> attribute, run it through a clever little <code>eval</code> function (don't worry, it's not the regular core <code>eval()</code> function) that is powered by <code>Function</code> objects and then start to observe the data.</p>
+<blockquote>
+<p>One thing to note here is that Alpine does not observe the original data object directly. Instead, it will make a clone of that object and store it elsewhere for observations.</p>
+</blockquote>
+<h2>Okay, that's cool. How do I use this data?</h2>
+<p>It's simple. Just like Vue, Alpine provides a variety of different directives that can be used to access and control your data.</p>
+<p>Let's start by making the text inside of the <code>span</code> match the value of our <code>foo</code> data property.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">div</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-data</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;{ foo: &#39;bar&#39; }&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">span</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-text</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;foo&quot;</span><span style="color: #24292F">&gt;&lt;/</span><span style="color: #116329">span</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">&lt;/</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<p>Now, when we view this HTML inside of the browser, we'll see that our <code>&lt;span&gt;</code> has the word <code>bar</code> inside of it. Want to know the best part of this? There is no virtual DOM, no crazy diff process going on. Just 7kb of JavaScript.</p>
+<h3>Changing the value of data properties</h3>
+<p>The example above is a bit pointless really. There's no way for us to change the value of <code>foo</code> so it's just static. Let's change this now by adding an input field.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">div</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-data</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;{ foo: &#39;bar&#39; }&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">span</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-text</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;foo&quot;</span><span style="color: #24292F">&gt;&lt;/</span><span style="color: #116329">span</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">input</span><span style="color: #24292F"> </span><span style="color: #0550AE">type</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;text&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-model</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;foo&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">&lt;/</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<p>Alpine provides another directive <code>x-model</code> which acts the same way as the one in Vue. Whenever we change the value inside of the input, our <code>foo</code> property will be updated and the text inside of our <code>&lt;span&gt;</code> will react.</p>
+<p>I've put this on CodePen so you can play around with it <a href="https://codepen.io/ryangjchandler/pen/oNXJaKg">here</a>, or use the embed below:</p>
+<p class="codepen" data-height="265" data-theme-id="dark" data-default-tab="html,result" data-user="ryangjchandler" data-slug-hash="oNXJaKg" data-preview="true" style="height: 265px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; border: 2px solid; margin: 1em 0; padding: 1em;" data-pen-title="Alpine.js Simple Data Reactivity ">
+  <span>See the Pen <a href="https://codepen.io/ryangjchandler/pen/oNXJaKg">
+  Alpine.js Simple Data Reactivity </a> by Ryan Chandler (<a href="https://codepen.io/ryangjchandler">@ryangjchandler</a>)
+  on <a href="https://codepen.io">CodePen</a>.</span>
+</p>
+&lt;script async src="https://static.codepen.io/assets/embed/ei.js">&lt;/script>
+<h2>Show me more</h2>
+<p>I'm going to post some more articles on using Alpine and how it might be able to replace Vue or React in some of your applications.</p>
+<p>If you want to get ahead of the game, check out <a href="https://github.com/alpinejs/alpine">the README file in the GitHub repo</a> which is the current official documentation.</p>
+<p>Let me know what you thought about this article on Twitter! I'm always up for improving my writing so every opinion is welcome.</p>
+
+    
+</body>
+</html>

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>Highlight Laravel Blade Templates with Highlight.php</h2>
+
+<p>Before we begin, this blog posts assumes you already have <a href="https://github.com/scrivo/highlight.php">Highlight.php</a> setup in your application. If you don't already have it setup, consult the <a href="https://github.com/scrivo/highlight.php">official documentation</a> or look into alternatives such as <a href="https://github.com/spatie/commonmark-highlighter"><code>commonmark-highlighter</code></a> that use this library under the hood.</p>
+<h2>The syntax</h2>
+<p>Highlight.php uses JSON files for syntax definitions, where as Highlight.js uses JavaScript files. This is just down to the fact that one is written in PHP where JavaScript evaluation is basically impossible and the other is a JavaScript library, so JavaScript can be used for configuration.</p>
+<p>Here is the JSON file for the Blade syntax definition:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">{</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0550AE">&quot;case_insensitive&quot;</span><span style="color: #24292F">: </span><span style="color: #0550AE">true</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0550AE">&quot;subLanguage&quot;</span><span style="color: #24292F">: </span><span style="color: #0A3069">&quot;xml&quot;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0550AE">&quot;contains&quot;</span><span style="color: #24292F">: [</span></span>
+<span class="line"><span style="color: #24292F">        {</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #0550AE">&quot;className&quot;</span><span style="color: #24292F">: </span><span style="color: #0A3069">&quot;comment&quot;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #0550AE">&quot;begin&quot;</span><span style="color: #24292F">: </span><span style="color: #0A3069">&quot;</span><span style="color: #0550AE">\\</span><span style="color: #0A3069">{</span><span style="color: #0550AE">\\</span><span style="color: #0A3069">{--&quot;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #0550AE">&quot;end&quot;</span><span style="color: #24292F">: </span><span style="color: #0A3069">&quot;--</span><span style="color: #0550AE">\\</span><span style="color: #0A3069">}</span><span style="color: #0550AE">\\</span><span style="color: #0A3069">}&quot;</span></span>
+<span class="line"><span style="color: #24292F">        },</span></span>
+<span class="line"><span style="color: #24292F">        {</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #0550AE">&quot;className&quot;</span><span style="color: #24292F">: </span><span style="color: #0A3069">&quot;template-variable&quot;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #0550AE">&quot;begin&quot;</span><span style="color: #24292F">: </span><span style="color: #0A3069">&quot;</span><span style="color: #0550AE">\\</span><span style="color: #0A3069">{</span><span style="color: #0550AE">\\</span><span style="color: #0A3069">{&quot;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #0550AE">&quot;starts&quot;</span><span style="color: #24292F">: {</span></span>
+<span class="line"><span style="color: #24292F">                </span><span style="color: #0550AE">&quot;end&quot;</span><span style="color: #24292F">: </span><span style="color: #0A3069">&quot;</span><span style="color: #0550AE">\\</span><span style="color: #0A3069">}</span><span style="color: #0550AE">\\</span><span style="color: #0A3069">}&quot;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">                </span><span style="color: #0550AE">&quot;returnEnd&quot;</span><span style="color: #24292F">: </span><span style="color: #0550AE">true</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">                </span><span style="color: #0550AE">&quot;subLanguage&quot;</span><span style="color: #24292F">: </span><span style="color: #0A3069">&quot;php&quot;</span></span>
+<span class="line"><span style="color: #24292F">            }</span></span>
+<span class="line"><span style="color: #24292F">        },</span></span>
+<span class="line"><span style="color: #24292F">        {</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #0550AE">&quot;className&quot;</span><span style="color: #24292F">: </span><span style="color: #0A3069">&quot;template-variable&quot;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #0550AE">&quot;begin&quot;</span><span style="color: #24292F">: </span><span style="color: #0A3069">&quot;</span><span style="color: #0550AE">\\</span><span style="color: #0A3069">}</span><span style="color: #0550AE">\\</span><span style="color: #0A3069">}&quot;</span></span>
+<span class="line"><span style="color: #24292F">        },</span></span>
+<span class="line"><span style="color: #24292F">        {</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #0550AE">&quot;className&quot;</span><span style="color: #24292F">: </span><span style="color: #0A3069">&quot;template-variable&quot;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #0550AE">&quot;begin&quot;</span><span style="color: #24292F">: </span><span style="color: #0A3069">&quot;</span><span style="color: #0550AE">\\</span><span style="color: #0A3069">{!!&quot;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #0550AE">&quot;starts&quot;</span><span style="color: #24292F">: {</span></span>
+<span class="line"><span style="color: #24292F">                </span><span style="color: #0550AE">&quot;end&quot;</span><span style="color: #24292F">: </span><span style="color: #0A3069">&quot;!!</span><span style="color: #0550AE">\\</span><span style="color: #0A3069">}&quot;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">                </span><span style="color: #0550AE">&quot;returnEnd&quot;</span><span style="color: #24292F">: </span><span style="color: #0550AE">true</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">                </span><span style="color: #0550AE">&quot;subLanguage&quot;</span><span style="color: #24292F">: </span><span style="color: #0A3069">&quot;php&quot;</span></span>
+<span class="line"><span style="color: #24292F">            }</span></span>
+<span class="line"><span style="color: #24292F">        },</span></span>
+<span class="line"><span style="color: #24292F">        {</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #0550AE">&quot;className&quot;</span><span style="color: #24292F">: </span><span style="color: #0A3069">&quot;template-variable&quot;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #0550AE">&quot;begin&quot;</span><span style="color: #24292F">: </span><span style="color: #0A3069">&quot;!!</span><span style="color: #0550AE">\\</span><span style="color: #0A3069">}&quot;</span></span>
+<span class="line"><span style="color: #24292F">        },</span></span>
+<span class="line"><span style="color: #24292F">        {</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #0550AE">&quot;className&quot;</span><span style="color: #24292F">: </span><span style="color: #0A3069">&quot;template-tag&quot;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #0550AE">&quot;begin&quot;</span><span style="color: #24292F">: </span><span style="color: #0A3069">&quot;@php&quot;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #0550AE">&quot;starts&quot;</span><span style="color: #24292F">: {</span></span>
+<span class="line"><span style="color: #24292F">                </span><span style="color: #0550AE">&quot;end&quot;</span><span style="color: #24292F">: </span><span style="color: #0A3069">&quot;@endphp&quot;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">                </span><span style="color: #0550AE">&quot;returnEnd&quot;</span><span style="color: #24292F">: </span><span style="color: #0550AE">true</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">                </span><span style="color: #0550AE">&quot;subLanguage&quot;</span><span style="color: #24292F">: </span><span style="color: #0A3069">&quot;php&quot;</span></span>
+<span class="line"><span style="color: #24292F">            },</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #0550AE">&quot;relevance&quot;</span><span style="color: #24292F">: </span><span style="color: #0550AE">10</span></span>
+<span class="line"><span style="color: #24292F">        },</span></span>
+<span class="line"><span style="color: #24292F">        {</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #0550AE">&quot;begin&quot;</span><span style="color: #24292F">: </span><span style="color: #0A3069">&quot;@[</span><span style="color: #0550AE">\\</span><span style="color: #0A3069">w]+&quot;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #0550AE">&quot;end&quot;</span><span style="color: #24292F">: </span><span style="color: #0A3069">&quot;[</span><span style="color: #0550AE">\\</span><span style="color: #0A3069">W]&quot;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #0550AE">&quot;excludeEnd&quot;</span><span style="color: #24292F">: </span><span style="color: #0550AE">true</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">            </span><span style="color: #0550AE">&quot;className&quot;</span><span style="color: #24292F">: </span><span style="color: #0A3069">&quot;template-tag&quot;</span></span>
+<span class="line"><span style="color: #24292F">        }</span></span>
+<span class="line"><span style="color: #24292F">    ]</span></span>
+<span class="line"><span style="color: #24292F">}</span></span>
+<span class="line"></span></code></pre>
+<p>At a very basic level, this JSON files uses RegEx patterns to describe starting and ending delimiters. Those patterns are used to match your code blocks against a particular type of token and then add a class to the wrapping HTML element.</p>
+<p>As an example, the very first items inside of the <code>contains</code> key is an object that stores information about comments. The <code>className</code> describes which <code>hljs-</code> class will be added to that text node. In this case a <code>hljs-comment</code> class will be added when <code>{{--</code> is encountered.</p>
+<p>When that first pattern is matched, it will continue to match the text until the <code>end</code> pattern matches. As a result, our Blade comments are rendered as:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #6E7781">{{-- This is a comment. --}}</span></span>
+<span class="line"></span></code></pre>
+<p>Any objects that have a <code>starts</code> key indicate that matching the <code>begin</code> pattern should start a new sublanguage block. This is what lets you highlight text inside of <code>{{ }}</code> as PHP, instead of a plain-text string.</p>
+<p>The same applies to the <code>@php</code> and <code>@endphp</code> blocks. Everything that is found within those 2 directives will be highlighted as PHP.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #0550AE">{{</span><span style="color: #24292F"> \</span><span style="color: #953800">Example</span><span style="color: #CF222E">::</span><span style="color: #8250DF">method</span><span style="color: #24292F">() </span><span style="color: #0550AE">}}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">@php</span></span>
+<span class="line"><span style="color: #24292F">$example </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0550AE">2</span><span style="color: #24292F"> </span><span style="color: #CF222E">+</span><span style="color: #24292F"> </span><span style="color: #0550AE">2</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #0550AE">echo</span><span style="color: #24292F"> $example;</span></span>
+<span class="line"><span style="color: #24292F">@endphp</span></span>
+<span class="line"></span></code></pre>
+<p>The <code>@php</code> and <code>@endphp</code> rules also have a <code>relevance</code> key. The higher that value of this key, the more likely it is to be used to automatically match the current syntax.</p>
+<p>If you don't specify which language you are currently rendering and your code contains an <code>@php</code> directive, Highlight.php will use this relevance and assume you're trying to render Blade.</p>
+<h3>Storing our syntax</h3>
+<p>This is all down to personal preference, but I like to keep my <code>blade.json</code> file in a <code>resources/syntax</code> folder in my Laravel applications. You can of course place this anywhere you like, just be sure to change any references to it later on.</p>
+<h2>Registering the syntax</h2>
+<p>Once you have created the <code>blade.json</code> file, we need to tell Highlight.php to use this new syntax definition. This is really simple and only requires a single line of code:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #0550AE">\Highlight\Highlighter</span><span style="color: #CF222E">::</span><span style="color: #8250DF">registerLanguage</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;blade&#39;</span><span style="color: #24292F">, </span><span style="color: #8250DF">resource_path</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;syntax/blade.json&#39;</span><span style="color: #24292F">), </span><span style="color: #0550AE">true</span><span style="color: #24292F">);</span></span>
+<span class="line"></span></code></pre>
+<p>The first argument is the identifier for the language. In this case, I'll use <code>blade</code>.</p>
+<p>The second argument is where your <code>blade.json</code> file is stored. I've stored mine in <code>resources/syntax/blade.json</code> so I'm using the <code>resource_path()</code> helper to get the correct path.</p>
+<p>The third argument is optional, but it will forcefully overwrite any existing <code>blade</code> definitions. At the time of writing, Highlight.php doesn't have it's own (obviously, that's why you're here) so I'm going to say <code>true</code> so that nothing unexpectedly breaks in the future.</p>
+<blockquote>
+<p>Ensure that you execute this code <strong>before</strong> attempting to highlight anything. In a Laravel application, you could put it inside of a <code>ServiceProvider</code>.</p>
+</blockquote>
+<h2>Using the custom syntax</h2>
+<p>Once that's all done, you will be able to use <code>blade</code> code in your blocks. Here's an example:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">h1</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">@auth</span></span>
+<span class="line"><span style="color: #24292F">        Hello, </span><span style="color: #0550AE">{{</span><span style="color: #24292F"> $user</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">name </span><span style="color: #0550AE">}}</span><span style="color: #24292F">!</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">@else</span></span>
+<span class="line"><span style="color: #24292F">        Hello!</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">@endauth</span></span>
+<span class="line"><span style="color: #24292F">&lt;/</span><span style="color: #116329">h1</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">&lt;</span><span style="color: #82071E; font-style: italic">livewire:user-profile</span><span style="color: #24292F"> </span><span style="color: #0550AE">user</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;</span><span style="color: #0550AE">{{</span><span style="color: #24292F"> $user</span><span style="color: #CF222E">-&gt;</span><span style="color: #24292F">name </span><span style="color: #0550AE">}}</span><span style="color: #0A3069">&quot;</span><span style="color: #24292F"> /&gt;</span></span>
+<span class="line"></span></code></pre>
+<h2>Planned improvements</h2>
+<p>As I mentioned before, code inside of <code>{{ }}</code> will try to be highlighted using the PHP syntax definitions. This is great, but when you try to right code inside of directives that expect expressions, it isn't highlighted correctly:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">@if</span><span style="color: #24292F">(</span><span style="color: #0550AE">2</span><span style="color: #24292F"> </span><span style="color: #CF222E">+</span><span style="color: #24292F"> </span><span style="color: #0550AE">2</span><span style="color: #24292F"> </span><span style="color: #CF222E">===</span><span style="color: #24292F"> </span><span style="color: #0550AE">5</span><span style="color: #24292F">)</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #0550AE">{{</span><span style="color: #24292F"> </span><span style="color: #0550AE">5</span><span style="color: #24292F"> </span><span style="color: #0550AE">}}</span></span>
+<span class="line"><span style="color: #CF222E">@endif</span></span>
+<span class="line"></span></code></pre>
+<p>This is a limitation of Highlight.js and, in turn, Highlight.php. Since the tokeniser relies on a beginning and ending pattern, it's quite hard to match all content between a pair of matching parentheses.</p>
+<p>There might be a way to solve this, but my RegEx skills are nowhere near good enough. If you've got any ideas, I'd love to know on <a href="https://twitter.com">Twitter</a>.</p>
+<p>Another thing that I'd like to add in PHP highlighting inside of <code>&lt;x:</code> or <code>&lt;livewire:</code> attribute bindings. Since the syntax definition extends from XML, the attributes themselves can be highlighted but the content of those attributes is just rendered as a string.</p>
+<p>This one is a bit easier to solve than the directive expressions, so I'll play around with the RegEx and update this article accordingly.</p>
+<p>If you want a separate reference, I've put the slimmed down instructions into a <a href="https://gist.github.com/ryangjchandler/f939b4105cf665e564df638d93e8c7d7">GitHub Gist here</a>.</p>
+<p>Got any ideas or improvements? Comment on the Gist above and I'll reply as best as I can.</p>
+
+    
+</body>
+</html>

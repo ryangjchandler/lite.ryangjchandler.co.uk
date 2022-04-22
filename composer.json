@@ -1,6 +1,25 @@
 {
-    
     "require": {
-        "ryangjchandler/downmark": "^0.0.2"
+        "symfony/finder": "^6.0",
+        "nesbot/carbon": "^2.57",
+        "spatie/yaml-front-matter": "^2.0",
+        "spatie/shiki-php": "^1.2",
+        "symfony/process": "^6.0",
+        "illuminate/collections": "^9.9",
+        "spatie/commonmark-shiki-highlighter": "^2.1"
+    },
+    "require-dev": {
+        "symfony/var-dumper": "^6.0"
+    },
+    "scripts": {
+        "build": [
+            "@php ./bin/generate.php"
+        ],
+        "update:remote": [
+            "git submodule update --remote --merge"
+        ],
+        "cache:clear": [
+            "cd ./cache && find . -type f -not -name '.gitignore' -delete"
+        ]
     }
 }

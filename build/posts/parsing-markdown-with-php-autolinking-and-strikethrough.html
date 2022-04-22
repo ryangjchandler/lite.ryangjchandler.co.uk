@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>Parsing Markdown with PHP: Autolinking and Strikethrough</h2>
+
+<p>When you want to use links in your Markdown, you would normally use the following syntax:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">[</span><span style="color: #0A3069; text-decoration: underline">Text for the link</span><span style="color: #24292F">](https://example.com)</span></span>
+<span class="line"></span></code></pre>
+<p>Sometimes you don't need text for the link. Instead you want the URL itself to be clickable, so you end up doing something like this:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">[</span><span style="color: #0A3069; text-decoration: underline">https://example.com</span><span style="color: #24292F">](https://example.com)</span></span>
+<span class="line"></span></code></pre>
+<p>Some editors and Markdown parsers, such as GitHub's one, are smart and will automatically makes URLs clickable in your text. This is known as &quot;autolinking&quot;.</p>
+<p>The same thing can be achieved with the CommonMark parser that we have been using in this series.</p>
+<h2>Setting up the environment</h2>
+<p>Before we can get autolinking, we need to first change how our parser is being setup. Previously, I showed you how to parse Markdown like this:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">League\CommonMark\CommonMarkConverter</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">$converter </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #CF222E">new</span><span style="color: #24292F"> </span><span style="color: #0550AE">CommonMarkConverter</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">$html </span><span style="color: #CF222E">=</span><span style="color: #24292F"> $converter</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">convertToHtml</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;# Hello World&#39;</span><span style="color: #24292F">);</span></span>
+<span class="line"></span></code></pre>
+<p>The <code>league/commonmark</code> package also provides a nice extensible API available through, what they call, <a href="https://commonmark.thephpleague.com/1.5/customization/environment/">custom environments</a>.</p>
+<p>To create a custom environment, you need to create a new instance of the <code>League\CommonMark\Environment</code> class. Instead of instantiating it via the <code>new</code> keyword, you instead need to use a &quot;named constructor&quot;.</p>
+<blockquote>
+<p>A named constructor is a static method on the class that is responsible for instantiating that class in a particular fashion.</p>
+</blockquote>
+<p>The named constructor ensures that all of the default renderers and parsers are setup on the converter object so that you don't have to do it yourself.</p>
+<p>Here's how it's done:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">League\CommonMark\CommonMarkConverter</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">League\CommonMark\Environment</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">$environment </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0550AE">Environment</span><span style="color: #CF222E">::</span><span style="color: #8250DF">createCommonMarkEnvironment</span><span style="color: #24292F">();</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">$converter </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #CF222E">new</span><span style="color: #24292F"> </span><span style="color: #0550AE">CommonMarkConverter</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">$html </span><span style="color: #CF222E">=</span><span style="color: #24292F"> $converter</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">convertToHtml</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;# Hello World&#39;</span><span style="color: #24292F">);</span></span>
+<span class="line"></span></code></pre>
+<p>Now that the environment has been created, it needs to be provided to the <code>CommonMarkConverter</code> object.</p>
+<p>As you saw in the last instalment, the first argument to the constructor is an array of options. The environment needs to be passed through as the second argument, like so:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">League\CommonMark\CommonMarkConverter</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">League\CommonMark\Environment</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">$environment </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0550AE">Environment</span><span style="color: #CF222E">::</span><span style="color: #8250DF">createCommonMarkEnvironment</span><span style="color: #24292F">();</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">$converter </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #CF222E">new</span><span style="color: #24292F"> </span><span style="color: #0550AE">CommonMarkConverter</span><span style="color: #24292F">([], $environment);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">$html </span><span style="color: #CF222E">=</span><span style="color: #24292F"> $converter</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">convertToHtml</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;# Hello World&#39;</span><span style="color: #24292F">);</span></span>
+<span class="line"></span></code></pre>
+<h2>Adding the autolink extension</h2>
+<p>With the environment setup, the extension can be added using the <code>Environment::addExtension()</code> method.</p>
+<p>Each extension is declared as a separate class. In this case, the autolinking extension is declared under the <code>League\CommonMark\Extension\Autolink\AutolinkExtension</code> class.</p>
+<p>The <code>Environment::addExtension()</code> method will expect a new instance of the extension:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">League\CommonMark\CommonMarkConverter</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">League\CommonMark\Environment</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">League\CommonMark\Extension\Autolink\AutolinkExtension</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">$environment </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0550AE">Environment</span><span style="color: #CF222E">::</span><span style="color: #8250DF">createCommonMarkEnvironment</span><span style="color: #24292F">();</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">$environment</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">addExtension</span><span style="color: #24292F">(</span><span style="color: #CF222E">new</span><span style="color: #24292F"> </span><span style="color: #0550AE">AutolinkExtension</span><span style="color: #24292F">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">$converter </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #CF222E">new</span><span style="color: #24292F"> </span><span style="color: #0550AE">CommonMarkConverter</span><span style="color: #24292F">([], $environment);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">$html </span><span style="color: #CF222E">=</span><span style="color: #24292F"> $converter</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">convertToHtml</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;This is an awesome website, check out https://ryangjchandler.co.uk now!&#39;</span><span style="color: #24292F">);</span></span>
+<span class="line"></span></code></pre>
+<p>With all of this setup, you can use URLs as links in your Markdown. Running the following Markdown through the converter:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">This is an awesome website, check out https://ryangjchandler.co.uk now!</span></span>
+<span class="line"></span></code></pre>
+<p>Will result in the following HTML:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">This is an awesome website, check out &lt;</span><span style="color: #116329">a</span><span style="color: #24292F"> </span><span style="color: #0550AE">href</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;https://ryangjchandler.co.uk&quot;</span><span style="color: #24292F">&gt;https://ryangjchandler.co.uk&lt;/</span><span style="color: #116329">a</span><span style="color: #24292F">&gt; now!</span></span>
+<span class="line"></span></code></pre>
+<h2>Striking through text</h2>
+<p>Although I can't think of many places where I ever need to strikethrough text, it <em>can</em> be useful sometimes. A good use case could be in a GitHub issue where you want to strikethrough something you have said previously and update it.</p>
+<p>Out of the box, that isn't supported. The syntax for striking through also changes between specifications, but in this case, it's going to be something like this:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">The next piece of text should be ~~striked~~ out.</span></span>
+<span class="line"></span></code></pre>
+<p>To add support for this, you need to add another extension to the environment.</p>
+<p>The extension needed is the <code>League\CommonMark\Extension\Strikethrough\StrikethroughExtension</code> extension.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">League\CommonMark\CommonMarkConverter</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">League\CommonMark\Environment</span><span style="color: #24292F">;</span></span>
+<span class="line"><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">League\CommonMark\Extension\Strikethrough\StrikethroughExtension</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">$environment </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0550AE">Environment</span><span style="color: #CF222E">::</span><span style="color: #8250DF">createCommonMarkEnvironment</span><span style="color: #24292F">();</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">$environment</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">addExtension</span><span style="color: #24292F">(</span><span style="color: #CF222E">new</span><span style="color: #24292F"> </span><span style="color: #0550AE">StrikethroughExtension</span><span style="color: #24292F">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">$converter </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #CF222E">new</span><span style="color: #24292F"> </span><span style="color: #0550AE">CommonMarkConverter</span><span style="color: #24292F">([], $environment);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">$html </span><span style="color: #CF222E">=</span><span style="color: #24292F"> $converter</span><span style="color: #CF222E">-&gt;</span><span style="color: #8250DF">convertToHtml</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;The next piece of text should be ~~striked~~ out.&#39;</span><span style="color: #24292F">);</span></span>
+<span class="line"></span></code></pre>
+<h2>Sign off</h2>
+<p>Thanks for reading this article. In the next instalment, I'll be showing you how you can use tables in your Markdown.</p>
+<p>Thanks for reading! 👋</p>
+
+    
+</body>
+</html>

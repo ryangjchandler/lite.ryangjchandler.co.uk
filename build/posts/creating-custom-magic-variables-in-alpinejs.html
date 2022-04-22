@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>Creating Custom Magic Variables in Alpine.js</h2>
+
+<p>DRY code is important and it can be difficult to be <em>completely</em> DRY with your code, especially when you're using a front-end framework such as Alpine.</p>
+<p>There a couple of ways to reduce code duplication, especially when it comes to utility functions for string manipulation or HTTP requests. With the release of Alpine v2.5 we can register custom magic variables that will allow us to reduce that duplication without copying and pasting functions, or adding a load of functions to the global namespace.</p>
+<h2>The entry point</h2>
+<p>All of Alpine's public API runs through a global <code>window.Alpine</code> object. Registering magic variables is no different.</p>
+<p>A single call to <code>Alpine.addMagicProperty</code> will get you well on your way.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">Alpine.</span><span style="color: #8250DF">addMagicProperty</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;property&#39;</span><span style="color: #24292F">, </span><span style="color: #CF222E">function</span><span style="color: #24292F"> (</span><span style="color: #953800">$el</span><span style="color: #24292F">) {</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">});</span></span>
+<span class="line"></span></code></pre>
+<p>The first argument is the name of the magic property. If you're familiar with Alpine, you have probably already used <code>$refs</code>, <code>$dispatch</code> or <code>$el</code>.</p>
+<p><strong>The name you provide doesn't need to have any prefix, Alpine will automatically add a <code>$</code> prefix so that it is more inline with the Alpine ones.</strong></p>
+<p>The second argument is the callback for the magic variable. This function will receive the root element for the component, <strong>not</strong> the component instance itself.</p>
+<p>You can use this callback to return a scalar value such as a string, boolean or integer, or even return another function so that the magic variable can be invoked.</p>
+<h2>A good example</h2>
+<p>Nowadays I try to avoid using third-party libraries (where possible) and ship JavaScript that utilises native browser APIs. Let's take this approach and create a little helper for the <a href="https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API">Fetch API</a>.</p>
+<p>I want a magic variable called <code>$post</code> that will send a <code>POST</code> request to the URL provided as the first argument and pass along any data that I provide as the second argument.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">Alpine.</span><span style="color: #8250DF">addMagicProperty</span><span style="color: #24292F">(</span><span style="color: #0A3069">&#39;post&#39;</span><span style="color: #24292F">, </span><span style="color: #CF222E">function</span><span style="color: #24292F"> () {</span></span>
+<span class="line"><span style="color: #24292F">    </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #CF222E">function</span><span style="color: #24292F"> (</span><span style="color: #953800">url</span><span style="color: #24292F">, </span><span style="color: #953800">data</span><span style="color: #24292F"> </span><span style="color: #CF222E">=</span><span style="color: #24292F"> {}) {</span></span>
+<span class="line"><span style="color: #24292F">        </span><span style="color: #CF222E">return</span><span style="color: #24292F"> </span><span style="color: #8250DF">fetch</span><span style="color: #24292F">(url, {</span></span>
+<span class="line"><span style="color: #24292F">            method: </span><span style="color: #0A3069">&#39;POST&#39;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">            headers: {</span></span>
+<span class="line"><span style="color: #24292F">                </span><span style="color: #0A3069">&#39;Content-Type&#39;</span><span style="color: #24292F">: </span><span style="color: #0A3069">&#39;application/json&#39;</span></span>
+<span class="line"><span style="color: #24292F">            },</span></span>
+<span class="line"><span style="color: #24292F">            redirect: </span><span style="color: #0A3069">&#39;follow&#39;</span><span style="color: #24292F">,</span></span>
+<span class="line"><span style="color: #24292F">            body: </span><span style="color: #0550AE">JSON</span><span style="color: #24292F">.</span><span style="color: #0550AE">stringify</span><span style="color: #24292F">(data)</span></span>
+<span class="line"><span style="color: #24292F">        });</span></span>
+<span class="line"><span style="color: #24292F">    }</span></span>
+<span class="line"><span style="color: #24292F">});</span></span>
+<span class="line"></span></code></pre>
+<p>By returning a function from our callback, we can now invoke the <code>$post</code> property:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">button</span><span style="color: #24292F"> </span><span style="color: #0550AE">type</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;button&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-on:click</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;$post(&#39;/posts&#39;, { id: 1, title: &#39;Awesome New Post&#39; })&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">  Create Post</span></span>
+<span class="line"><span style="color: #24292F">&lt;/</span><span style="color: #116329">button</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<p>Pretty sweet, eh?</p>
+<h2>Sign off</h2>
+<p>This was just a short article to show you the API for creating custom magic variables / properties in your Alpine components.</p>
+<p><strong>Note</strong>: This API is not documented and you should be careful using it.</p>
+<p>If you want to see some more examples of magic properties, <a href="https://twitter.com/kevinbatdorf">Kevin Batdorf</a> has created a collection of packages  / helpers for you to use. Here is <a href="https://github.com/KevinBatdorf/alpine-magic-helpers">the GitHub link</a>. (Huge shoutout to Kevin for being so active and helpful on the <a href="https://discord.com/invite/snmCYk3">Alpine.js Discord</a> too!)</p>
+<p>If you create any cool helper functions, please share them on <a href="https://twitter.com/ryangjchandler">Twitter</a>, I'm sure we'd all love to see them!</p>
+
+    
+</body>
+</html>

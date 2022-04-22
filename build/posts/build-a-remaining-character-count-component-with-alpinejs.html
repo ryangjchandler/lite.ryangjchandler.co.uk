@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>Build a Remaining Character Count Component with Alpine.js</h2>
+
+<p>Before we begin, let's lay down some basic markup for our character counter.</p>
+<p>I'm going to be using <code>x-ref</code> directives to identify each part so that you can keep track of everything easily.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">textarea</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-ref</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;content&quot;</span><span style="color: #24292F">&gt;&lt;/</span><span style="color: #116329">textarea</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">p</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-ref</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;remaining&quot;</span><span style="color: #24292F">&gt;&lt;/</span><span style="color: #116329">p</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">&lt;/</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<p>On top of that, we need to ensure Alpine can initialise a new component. Let's add an <code>x-data</code> attribute to the root element, in this case a <code>&lt;div&gt;</code>, as well as a data property to hold the contents of the <code>&lt;textarea&gt;</code>.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">div</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-data</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;{ content: &#39;&#39; }&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">textarea</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-ref</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;content&quot;</span><span style="color: #24292F">&gt;&lt;/</span><span style="color: #116329">textarea</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">p</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-ref</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;remaining&quot;</span><span style="color: #24292F">&gt;&lt;/</span><span style="color: #116329">p</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">&lt;/</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<p>The new <code>content</code> property hasn't been hooked up to the <code>&lt;textarea&gt;</code> yet. The simplest way to do this would be using <code>x-model</code>, which will add an event listener to the element and update the property with the elements <code>value</code> property.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">div</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-data</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;{ content: &#39;&#39; }&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">textarea</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-ref</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;content&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-model</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;content&quot;</span><span style="color: #24292F">&gt;&lt;/</span><span style="color: #116329">textarea</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">p</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-ref</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;remaining&quot;</span><span style="color: #24292F">&gt;&lt;/</span><span style="color: #116329">p</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">&lt;/</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<p>With data binding setup, all that's left to do is output the number of remaining characters. To do this, we need to know how many characters the content has and what the limit is.</p>
+<p>I like to use <code>data</code> attributes for variable pieces of data, such as the character limit. I'll add a new <code>data-limit</code> attribute to hold this.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">div</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-data</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;{ content: &#39;&#39; }&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">data-limit</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;100&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">textarea</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-ref</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;content&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-model</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;content&quot;</span><span style="color: #24292F">&gt;&lt;/</span><span style="color: #116329">textarea</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">p</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-ref</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;remaining&quot;</span><span style="color: #24292F">&gt;&lt;/</span><span style="color: #116329">p</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">&lt;/</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<p>The reason I like using <code>data</code> attributes is because if you later decide to move the data object into a function, you can still see the arguments that change the behaviour of the component directly in the markup.</p>
+<p>I'm also going to add a new property on our component to hold the limit.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">div</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-data</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;{ content: &#39;&#39;, limit: $el.dataset.limit }&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">data-limit</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;100&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">textarea</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-ref</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;content&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-model</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;content&quot;</span><span style="color: #24292F">&gt;&lt;/</span><span style="color: #116329">textarea</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">p</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-ref</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;remaining&quot;</span><span style="color: #24292F">&gt;&lt;/</span><span style="color: #116329">p</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">&lt;/</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<blockquote>
+<p>If you don't want to use a data attribute for the <code>limit</code>, you could put the value directly in the data object instead.</p>
+</blockquote>
+<p>The <code>$el</code> object being used is a magic variable provided by Alpine and is a reference to the root element (the <code>&lt;div&gt;</code>). Since this is just a regular <code>Element</code> object, we can use the <code>dataset</code> property to get the <code>data-limit</code>.</p>
+<p>There are a couple of ways to go about actually <em>outputting</em> the remaining characters. I'll cover both of them here, since you might like one more than the other.</p>
+<h3>Method One - template literals</h3>
+<p>Using Alpine's <code>x-text</code> alongside <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals">template literals</a>, you can dynamically set the <code>innerText</code> of an element.</p>
+<p>Applying this method to the element looks a little something like:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">div</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-data</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;{ content: &#39;&#39;, limit: $el.dataset.limit }&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">data-limit</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;100&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">textarea</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-ref</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;content&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-model</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;content&quot;</span><span style="color: #24292F">&gt;&lt;/</span><span style="color: #116329">textarea</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">p</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-ref</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;remaining&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-text</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;`You have ${limit - content.length} characters remaining.&quot;</span><span style="color: #24292F">&gt;&lt;/</span><span style="color: #116329">p</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">&lt;/</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<h3>Method Two - dynamic <code>&lt;span&gt;</code></h3>
+<p>Compared to the first method, this approach will only update the <code>innerText</code> of a single child element instead of the entire <code>&lt;p&gt;</code> element.</p>
+<p>This means that you can render the non-dynamic content on the server, or statically.</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">div</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-data</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;{ content: &#39;&#39;, limit: $el.dataset.limit }&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">data-limit</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;100&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">textarea</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-ref</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;content&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-model</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;content&quot;</span><span style="color: #24292F">&gt;&lt;/</span><span style="color: #116329">textarea</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">p</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-ref</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;remaining&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">        You have &lt;</span><span style="color: #116329">span</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-text</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;limit - content.length&quot;</span><span style="color: #24292F">&gt;&lt;/</span><span style="color: #116329">span</span><span style="color: #24292F">&gt; characters remaining.</span></span>
+<span class="line"><span style="color: #24292F">    &lt;/</span><span style="color: #116329">p</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">&lt;/</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<h2>Improvements</h2>
+<h3>Preventing flashing content</h3>
+<p>I personally prefer using server-rendered content to give the <code>&lt;span&gt;</code> some default text. In a Laravel application, I might do something like:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">div</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-data</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;{ content: &#39;&#39;, limit: $el.dataset.limit }&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">data-limit</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;{{ $limit }}&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">textarea</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-ref</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;content&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-model</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;content&quot;</span><span style="color: #24292F">&gt;&lt;/</span><span style="color: #116329">textarea</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">p</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-ref</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;remaining&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">        You have &lt;</span><span style="color: #116329">span</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-text</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;limit - content.length&quot;</span><span style="color: #24292F">&gt;{{ $limit }}&lt;/</span><span style="color: #116329">span</span><span style="color: #24292F">&gt; characters remaining.</span></span>
+<span class="line"><span style="color: #24292F">    &lt;/</span><span style="color: #116329">p</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">&lt;/</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<p>In this case, the <code>$limit</code> variable is coming from the server and will be rendered as the default value inside of the <code>&lt;span&gt;</code> element. This helps with &quot;flashing&quot; content, since Alpine needs some time to evaluate the <code>x-text</code> directive and set the <code>innerText</code> of the element.</p>
+<blockquote>
+<p>You could also tackle the &quot;flashing&quot; problem using <code>x-cloak</code>, as described in <a href="https://ryangjchandler.co.uk/articles/hiding-elements-until-alpine-is-ready-with-x-cloak">this article</a>.</p>
+</blockquote>
+<h3>Using a &quot;computed property&quot;</h3>
+<p>Alpine doesn't support computed properties in the same sense as Vue, but since the data object is just a regular object literal, you can make use of JavaScript's &quot;getters&quot;, as described in <a href="https://ryangjchandler.co.uk/articles/an-alternative-approach-to-computed-properties-in-alpinejs">this article</a>.</p>
+<p>This can hide the calculation logic from the directive itself:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">&lt;</span><span style="color: #116329">div</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-data</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;{</span></span>
+<span class="line"><span style="color: #0A3069">    content: &#39;&#39;,</span></span>
+<span class="line"><span style="color: #0A3069">    limit: $el.dataset.limit,</span></span>
+<span class="line"><span style="color: #0A3069">    get remaining() {</span></span>
+<span class="line"><span style="color: #0A3069">        return this.limit - this.content.length</span></span>
+<span class="line"><span style="color: #0A3069">    }</span></span>
+<span class="line"><span style="color: #0A3069">}&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">data-limit</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;100&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">textarea</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-ref</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;content&quot;</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-model</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;content&quot;</span><span style="color: #24292F">&gt;&lt;/</span><span style="color: #116329">textarea</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">    &lt;</span><span style="color: #116329">p</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-ref</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;remaining&quot;</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">        You have &lt;</span><span style="color: #116329">span</span><span style="color: #24292F"> </span><span style="color: #0550AE">x-text</span><span style="color: #24292F">=</span><span style="color: #0A3069">&quot;remaining&quot;</span><span style="color: #24292F">&gt;&lt;/</span><span style="color: #116329">span</span><span style="color: #24292F">&gt; characters remaining.</span></span>
+<span class="line"><span style="color: #24292F">    &lt;/</span><span style="color: #116329">p</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"><span style="color: #24292F">&lt;/</span><span style="color: #116329">div</span><span style="color: #24292F">&gt;</span></span>
+<span class="line"></span></code></pre>
+<h2>Sign off</h2>
+<p>If you would like to see an interactive version of this component, I've uploaded <a href="https://codepen.io/ryangjchandler/pen/ZEOrVPM">one to CodePen</a>.</p>
+<p>If you enjoyed this article or have any feedback, please feel free to let me know on <a href="https://twitter.com/ryangjchandler">Twitter</a>.</p>
+<p>Thanks for reading! 👋</p>
+
+    
+</body>
+</html>

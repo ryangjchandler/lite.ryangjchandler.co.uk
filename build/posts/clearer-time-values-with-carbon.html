@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A blog that covers Laravel, Javascript, Rust and more.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <style>
+        
+    </style>
+    <title>Ryan Chandler</title>
+</head>
+<body>
+    <a href="/">
+        <h1>
+            Ryan Chandler
+        </h1>
+    </a>
+<h2>Clearer Time Values with Carbon</h2>
+
+<p>Lots of applications involve date and time manipulation. Whether it's figuring out what day of the week it is, how many seconds are in a week or how many hours are in a century.</p>
+<p>Quite often, you'll see something like:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #24292F">$minutesInAWeek </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0550AE">7</span><span style="color: #24292F"> </span><span style="color: #CF222E">*</span><span style="color: #24292F"> </span><span style="color: #0550AE">24</span><span style="color: #24292F"> </span><span style="color: #CF222E">*</span><span style="color: #24292F"> </span><span style="color: #0550AE">60</span></span>
+<span class="line"></span></code></pre>
+<p>On a small scale, it's quite clear what is going on, but if you wrap this bit of logic in a function or another calculation, you can quickly lose sight of what <code>60</code> represents.</p>
+<p>Luckily, <a href="https://carbon.nesbot.com/">Carbon</a> provides a set of <a href="https://carbon.nesbot.com/docs/#api-constants">constants</a> that can clear it up, making it easy to see what each number represents.</p>
+<p>Lets take our example above and use these constants to make what's happening clearer:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">Carbon\Carbon</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">$minutesInAWeek </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0550AE">Carbon</span><span style="color: #CF222E">::</span><span style="color: #0550AE">DAYS_PER_WEEK</span><span style="color: #24292F"> </span><span style="color: #CF222E">*</span><span style="color: #24292F"> </span><span style="color: #0550AE">Carbon</span><span style="color: #CF222E">::</span><span style="color: #0550AE">HOURS_PER_DAY</span><span style="color: #24292F"> </span><span style="color: #CF222E">*</span><span style="color: #24292F"> </span><span style="color: #0550AE">Carbon</span><span style="color: #CF222E">::</span><span style="color: #0550AE">MINUTES_PER_HOUR</span><span style="color: #24292F">;</span></span>
+<span class="line"></span></code></pre>
+<p>Yes, it's verbose. But this kind of verbosity is good, in my opinion.</p>
+<p>If we wanted to take this further and figure out how many seconds are in a year, we could do:</p>
+<pre class="shiki" style="background-color: #ffffff"><code><span class="line"><span style="color: #CF222E">use</span><span style="color: #24292F"> </span><span style="color: #0550AE">Carbon\Carbon</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">$minutesInAWeek </span><span style="color: #CF222E">=</span><span style="color: #24292F"> </span><span style="color: #0550AE">Carbon</span><span style="color: #CF222E">::</span><span style="color: #0550AE">DAYS_PER_WEEK</span><span style="color: #24292F"> </span><span style="color: #CF222E">*</span><span style="color: #24292F"> </span><span style="color: #0550AE">Carbon</span><span style="color: #CF222E">::</span><span style="color: #0550AE">HOURS_PER_DAY</span><span style="color: #24292F"> </span><span style="color: #CF222E">*</span><span style="color: #24292F"> </span><span style="color: #0550AE">Carbon</span><span style="color: #CF222E">::</span><span style="color: #0550AE">MINUTES_PER_HOUR</span><span style="color: #24292F">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color: #24292F">$secondsInAYear </span><span style="color: #CF222E">=</span><span style="color: #24292F"> $minutesInAWeek </span><span style="color: #CF222E">*</span><span style="color: #24292F"> </span><span style="color: #0550AE">Carbon</span><span style="color: #CF222E">::</span><span style="color: #0550AE">SECONDS_PER_MINUTE</span><span style="color: #24292F"> </span><span style="color: #CF222E">*</span><span style="color: #24292F"> </span><span style="color: #0550AE">Carbon</span><span style="color: #CF222E">::</span><span style="color: #0550AE">WEEKS_PER_YEAR</span><span style="color: #24292F">;</span></span>
+<span class="line"></span></code></pre>
+<p>There's some more constants too, you can check out <a href="https://carbon.nesbot.com/docs/#api-constants">the full list in the documentation</a>.</p>
+
+    
+</body>
+</html>
